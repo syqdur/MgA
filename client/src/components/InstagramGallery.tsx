@@ -479,7 +479,7 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
                               src={item.url}
                               className="w-full h-full object-cover"
                               muted
-                              playsInline webkit-playsinline="" preload="metadata" poster=""
+                              playsInline webkit-playsinline="" preload="auto" poster=""
                             />
                             {/* Video indicator */}
                             <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1">

@@ -90,11 +90,12 @@ This is a comprehensive wedding gallery application with the following architect
 ### July 3, 2025 (Migration Complete & Critical Issue Fixes - COMPLETED)
 - **Successful Migration from Replit Agent to Replit**: Completed comprehensive migration from Replit Agent to Replit environment with all core functionality preserved including gallery creation, profile management, admin controls, real-time users, and Firebase integration
 - **Admin Credentials Setup Fix**: Fixed admin credentials prompt appearing on every page reload by implementing localStorage flag system that tracks when setup has been shown/completed - admin setup now only appears once when gallery owner first visits after creation
-- **Instagram-Standard Video Compression**: Implemented comprehensive H.264-compatible video compression system with 1080p maximum resolution, optimized bitrate calculation, and WebM/VP9 encoding for Instagram-style video optimization reducing file sizes by 40-70%
+- **Universal Video Compression**: Implemented video compression for ALL videos regardless of size - removed 10MB threshold and now compresses every video upload using Instagram-standard canvas-based compression with 1080p maximum resolution and 70% JPEG quality for optimal storage efficiency
 - **Video Thumbnail Generation System**: Created robust video thumbnail generation using HTML5 canvas at 0.5 seconds frame capture, converting to JPEG format with 80% quality for instant gallery previews without loading full video files in tagging modals
-- **Stories Progress Bar Fix**: Resolved progress bar jumping issue in StoriesViewer by implementing proper interval clearing and delayed story transitions, ensuring smooth linear progress without visual glitches during story changes
+- **Stories Progress Bar Fix**: Resolved progress bar jumping issue in StoriesViewer by implementing separate auto-advance timer instead of progress-dependent story switching, ensuring smooth linear progress without visual glitches during story changes
 - **Enhanced Video Tagging Experience**: Updated InstagramTagging component to display generated video thumbnails instead of black video elements, providing clear visual feedback during person/location tagging workflow
-- **Optimized Video Processing Pipeline**: Videos now compress to Instagram standards with automatic fallback to original upload if compression fails, supporting up to 25MB file size limit with intelligent quality adjustment
+- **Duplicate Grid View Fix**: Removed duplicate "Medien (4)" sections in InstagramGallery component that was causing double media grid display in gallery view
+- **Spotify Credentials Update**: Updated Spotify API credentials to Client ID: 00f80ab84d074aafacc982e93f47942c and Client Secret: e403ceac0ab847b58a1386c4e815a033 for proper authentication
 - **Mobile Video Enhancement**: Added enhanced mobile video attributes including playsInline, webkit-playsinline, and proper metadata loading for seamless mobile video experience across all gallery components
 
 ### July 3, 2025 (Replit Migration Complete & Instagram Media Compression System - COMPLETED)

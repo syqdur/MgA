@@ -67,26 +67,26 @@ export const StoriesViewer: React.FC<StoriesViewerProps> = ({
         const newProgress = prev + (100 / (STORY_DURATION / 100));
         
         if (newProgress >= 100) {
-          // Clear interval before changing story to prevent jumping
-          clearInterval(interval);
-          
-          // Move to next story after a small delay
-          setTimeout(() => {
-            if (currentIndex < stories.length - 1) {
-              setCurrentIndex(prev => prev + 1);
-            } else {
-              onClose();
-            }
-          }, 50);
-          
-          return 100; // Keep at 100% until story changes
+          return 100;
         }
         
         return newProgress;
       });
     }, 100);
 
-    return () => clearInterval(interval);
+    // Auto-advance timer - separate from progress to prevent jumping
+    const autoAdvanceTimer = setTimeout(() => {
+      if (currentIndex < stories.length - 1) {
+        setCurrentIndex(prev => prev + 1);
+      } else {
+        onClose();
+      }
+    }, STORY_DURATION);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(autoAdvanceTimer);
+    };
   }, [isOpen, isPaused, isLoading, currentIndex, stories.length, onClose]);
 
   // 🎯 NEW: Keyboard navigation

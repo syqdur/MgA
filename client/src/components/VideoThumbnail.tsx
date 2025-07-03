@@ -28,7 +28,14 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         setVideoReady(true);
       };
 
-      const handleError = () => {
+      const handleError = (e: Event) => {
+        const target = e.target as HTMLVideoElement;
+        console.error('📹 VideoThumbnail error:', {
+          src: target.src,
+          error: target.error,
+          networkState: target.networkState,
+          readyState: target.readyState
+        });
         setVideoError(true);
       };
 
@@ -105,7 +112,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         muted={isMuted}
         playsInline
         preload="metadata"
-        loop
+        loop={false}
         style={{
           objectFit: 'cover',
           width: '100%',

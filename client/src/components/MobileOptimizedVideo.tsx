@@ -192,7 +192,7 @@ const MobileOptimizedVideo: React.FC<MobileOptimizedVideoProps> = ({
         preload="metadata"
         poster={poster}
         controls={hasStarted && controls}
-        loop={loop}
+        loop={false}
         // Enable CORS for canvas drawing
         crossOrigin="anonymous"
         // Critical mobile video attributes
@@ -232,7 +232,23 @@ const MobileOptimizedVideo: React.FC<MobileOptimizedVideoProps> = ({
           }
         }}
         onError={(e) => {
-          console.error('📹 Video error:', e);
+          const video = e.target as HTMLVideoElement;
+          console.error('📹 Video error:', {
+            error: e,
+            src: video.src,
+            readyState: video.readyState,
+            networkState: video.networkState,
+            errorCode: video.error?.code,
+            errorMessage: video.error?.message
+          });
+          
+          // Try to reload the video once
+          if (video.error?.code === 4) { // MEDIA_ELEMENT_ERROR: Format error
+            console.log('📹 Format error detected, attempting to reload...');
+            setTimeout(() => {
+              video.load();
+            }, 1000);
+          }
         }}
         onLoadStart={() => {
           console.log('📹 Video load started');

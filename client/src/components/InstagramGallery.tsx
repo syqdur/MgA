@@ -5,6 +5,7 @@ import { InstagramPost } from './InstagramPost';
 import { NotePost } from './NotePost';
 import { GALLERY_THEMES } from '../config/themes';
 import MobileOptimizedVideo from './MobileOptimizedVideo';
+import RobustVideoPlayer from './RobustVideoPlayer';
 
 interface InstagramGalleryProps {
   items: MediaItem[];
@@ -475,14 +476,15 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
                       <div className="w-full h-full overflow-hidden">
                         {item.type === 'video' ? (
                           <div className="relative w-full h-full">
-                            <video
+                            <RobustVideoPlayer
                               src={item.url}
                               className="w-full h-full object-cover"
                               muted
-                              playsInline webkit-playsinline="" preload="auto" poster=""
+                              showFallback={true}
+                              fallbackText="Video wird geladen..."
                             />
                             {/* Video indicator */}
-                            <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1">
+                            <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1 z-20">
                               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                               </svg>
@@ -539,90 +541,7 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
             <GallerySkeleton isDarkMode={isDarkMode} />
           )}
 
-          {/* Media Grid */}
-          {mediaItems.length > 0 && (
-            <div>
-              <h3 className={`text-lg font-semibold mb-3 px-3 transition-colors duration-300 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>
-                📸 Medien ({mediaItems.length})
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2 px-2 sm:px-3">
-                {mediaItems.map((item, mediaIndex) => {
-                  // Find the original index in the full items array
-                  const originalIndex = items.findIndex(i => i.id === item.id);
-                  const itemLikes = likes.filter(l => l.mediaId === item.id);
-                  const itemComments = comments.filter(c => c.mediaId === item.id);
-                  
-                  return (
-                    <div
-                      key={item.id}
-                      className="relative aspect-square cursor-pointer group touch-manipulation"
-                      onClick={() => onItemClick(originalIndex)}
-                      style={{ minHeight: '120px' }}
-                    >
-                      {/* Media Content */}
-                      <div className="w-full h-full overflow-hidden">
-                        {item.type === 'video' ? (
-                          <div className="relative w-full h-full">
-                            <video
-                              src={item.url}
-                              className="w-full h-full object-cover"
-                              muted
-                              playsInline webkit-playsinline="" preload="metadata" poster=""
-                            />
-                            {/* Video indicator */}
-                            <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1">
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                          </div>
-                        ) : (
-                          <img
-                            src={item.url}
-                            alt={item.noteText || item.note || 'Uploaded media'}
-                            className="w-full h-full object-cover"
-                            loading={mediaIndex < 4 ? "eager" : "lazy"}
-                            decoding="async"
-                            style={{ 
-                              backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
-                              transition: 'opacity 0.2s ease-in-out'
-                            }}
-                            onLoad={(e) => {
-                              const img = e.target as HTMLImageElement;
-                              img.style.opacity = '1';
-                            }}
-                            onError={(e) => {
-                              const img = e.target as HTMLImageElement;
-                              img.style.opacity = '0.5';
-                              console.warn('Failed to load image:', item.url);
-                            }}
-                          />
-                        )}
-                      </div>
-                      
-                      {/* Mobile optimized overlay - shows on touch devices */}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center md:hover:opacity-100">
-                        <div className="text-white text-center">
-                          <div className="flex items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium">
-                            <span className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full">
-                              <span>❤️</span>
-                              {itemLikes.length}
-                            </span>
-                            <span className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full">
-                              <span>💬</span>
-                              {itemComments.length}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+
 
           {/* Loading indicator for more content */}
           {isLoadingMore && items.length > 0 && (

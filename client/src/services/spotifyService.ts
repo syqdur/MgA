@@ -4,7 +4,7 @@ import { SpotifyCredentials, SelectedPlaylist, SpotifyTrack } from '../types';
 import { generateCodeVerifier, generateCodeChallenge } from '../utils/pkce';
 import '../types/spotify';
 
-// Spotify API Configuration
+// Spotify API Configuration - Updated credentials from screenshot
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '00f80ab84d074aafacc982e93f47942c';
 const SPOTIFY_CLIENT_SECRET = import.meta.env.VITE_SPOTIFY_CLIENT_SECRET || 'e403ceac0ab847b58a1386c4e815a033';
 

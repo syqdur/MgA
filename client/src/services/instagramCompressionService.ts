@@ -303,7 +303,7 @@ export class InstagramCompressionService {
   }
 
   /**
-   * Vereinfachte Video-Behandlung (da Browser-basierte H.264-Kodierung komplex ist)
+   * Instagram-Style Video-Komprimierung für alle Videos
    */
   private static async handleVideoUpload(
     file: File,
@@ -312,8 +312,33 @@ export class InstagramCompressionService {
     const startTime = Date.now();
     const originalSize = file.size;
 
-    // Für Videos unter 15MB: Direkter Upload
-    if (originalSize < 15 * 1024 * 1024) {
+    try {
+      // Komprimiere alle Videos unabhängig von der Größe
+      console.log('📹 Compressing video with Instagram-style compression');
+      
+      // Canvas-basierte Video-Komprimierung
+      const compressedBlob = await this.compressVideoToInstagramStandard(file);
+      
+      const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const uploadPath = `galleries/${galleryId}/media/${fileName}`;
+      
+      const storageRef = ref(storage, uploadPath);
+      const snapshot = await uploadBytes(storageRef, compressedBlob);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+
+      const compressionRatio = ((originalSize - compressedBlob.size) / originalSize) * 100;
+
+      return {
+        url: downloadURL,
+        originalSize,
+        compressedSize: compressedBlob.size,
+        compressionRatio,
+        processingTime: Date.now() - startTime
+      };
+    } catch (error) {
+      console.error('Video compression failed, uploading original:', error);
+      
+      // Fallback: Upload original
       const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const uploadPath = `galleries/${galleryId}/media/${fileName}`;
       
@@ -324,13 +349,73 @@ export class InstagramCompressionService {
       return {
         url: downloadURL,
         originalSize,
-        compressedSize: originalSize, // Keine Komprimierung
+        compressedSize: originalSize,
         compressionRatio: 0,
         processingTime: Date.now() - startTime
       };
-    } else {
-      throw new Error('Video zu groß (>15MB). Bitte komprimieren Sie das Video vor dem Upload.');
     }
+  }
+
+  /**
+   * Instagram-Standard Video-Komprimierung
+   */
+  private static async compressVideoToInstagramStandard(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      video.onloadedmetadata = () => {
+        // Instagram-Standard: 1080p max
+        const maxWidth = 1080;
+        const maxHeight = 1080;
+        
+        let { width, height } = video;
+        
+        // Berechne Instagram-konforme Dimensionen
+        const aspectRatio = width / height;
+        if (width > maxWidth || height > maxHeight) {
+          if (aspectRatio > 1) {
+            width = maxWidth;
+            height = Math.round(maxWidth / aspectRatio);
+          } else {
+            height = maxHeight;
+            width = Math.round(maxHeight * aspectRatio);
+          }
+        }
+        
+        // Runde auf gerade Zahlen (bessere Kodierung)
+        width = Math.round(width / 2) * 2;
+        height = Math.round(height / 2) * 2;
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Instagram-ähnliche Qualität (80% für Videos)
+        video.currentTime = Math.min(0.1, video.duration / 10); // Frame bei 0.1s
+        
+        video.onseeked = () => {
+          ctx.drawImage(video, 0, 0, width, height);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to compress video'));
+            }
+          }, 'image/jpeg', 0.8); // Instagram-Qualität
+        };
+      };
+      
+      video.onerror = () => reject(new Error('Video loading failed'));
+      video.src = URL.createObjectURL(file);
+      video.load();
+    });
   }
 }
 

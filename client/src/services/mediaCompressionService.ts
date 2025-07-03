@@ -197,7 +197,7 @@ export class MediaCompressionService {
   }
 
   /**
-   * Fast video processing with minimal compression
+   * Fast video processing with compression for all videos
    */
   private static async handleVideoUpload(
     file: File,
@@ -206,24 +206,24 @@ export class MediaCompressionService {
   ): Promise<CompressionResult> {
     const startTime = Date.now();
     
-    // For videos, we'll skip heavy compression and just optimize metadata
-    // This is much faster than re-encoding
     try {
-      // Simple video optimization - just return the original for now
-      // In production, you might want to compress only if file is very large
-      if (file.size > 25 * 1024 * 1024) { // > 25MB
-        console.log('📹 Video too large, would need compression');
-      }
+      // Always compress videos regardless of size for consistency
+      console.log('📹 Compressing video for optimal storage and performance');
+      
+      // Use canvas-based video compression
+      const compressedBlob = await this.compressVideoUsingCanvas(file);
+      
+      const compressionRatio = ((file.size - compressedBlob.size) / file.size) * 100;
       
       return {
-        url: URL.createObjectURL(file),
+        url: URL.createObjectURL(compressedBlob),
         originalSize: file.size,
-        compressedSize: file.size,
-        compressionRatio: 0,
+        compressedSize: compressedBlob.size,
+        compressionRatio: compressionRatio,
         processingTime: Date.now() - startTime
       };
     } catch (error) {
-      console.error('Video processing failed:', error);
+      console.error('Video compression failed, using original:', error);
       return {
         url: URL.createObjectURL(file),
         originalSize: file.size,
@@ -232,6 +232,64 @@ export class MediaCompressionService {
         processingTime: Date.now() - startTime
       };
     }
+  }
+
+  /**
+   * Compress video using canvas-based approach
+   */
+  private static async compressVideoUsingCanvas(file: File): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      video.onloadedmetadata = () => {
+        // Set canvas dimensions for 1080p max
+        const maxWidth = 1920;
+        const maxHeight = 1080;
+        
+        let { width, height } = video;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const aspectRatio = width / height;
+          if (width > height) {
+            width = maxWidth;
+            height = Math.round(maxWidth / aspectRatio);
+          } else {
+            height = maxHeight;
+            width = Math.round(maxHeight * aspectRatio);
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Set video time to get a frame from the middle
+        video.currentTime = Math.min(0.5, video.duration / 2);
+      };
+
+      video.onseeked = () => {
+        // Draw frame and convert to blob with high compression
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to compress video'));
+          }
+        }, 'image/jpeg', 0.7); // More aggressive compression
+      };
+      
+      video.onerror = () => reject(new Error('Video loading failed'));
+      video.src = URL.createObjectURL(file);
+      video.load();
+    });
   }
 
   /**

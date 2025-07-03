@@ -1588,10 +1588,11 @@
           <InstagramTagging
             isOpen={showTaggingModal}
             onClose={handleTaggingCancel}
-            onConfirm={handleTaggingConfirm}
+            onSave={handleTaggingConfirm}
             mediaUrl={pendingUploadUrl}
             mediaType={pendingUploadFiles?.[0]?.type.startsWith('video') ? 'video' : 'image'}
-            galleryUsers={galleryUsers}
+            galleryId={gallery.firebaseId}
+            initialTags={[]}
           />
         )}
       </div>

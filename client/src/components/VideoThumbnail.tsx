@@ -108,6 +108,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
       {/* Video element as thumbnail - paused at first frame */}
       <video
         ref={videoRef}
+        src={src}
         className={className}
         muted={isMuted}
         playsInline
@@ -128,12 +129,7 @@ const VideoThumbnail: React.FC<VideoThumbnailProps> = ({
         onError={() => {
           setVideoError(true);
         }}
-      >
-        <source src={src} type="video/mp4" />
-        <source src={src} type="video/webm" />
-        <source src={src} type="video/ogg" />
-        Your browser does not support the video tag.
-      </video>
+      />
       
       {/* Loading overlay */}
       {!videoReady && !videoError && (

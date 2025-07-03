@@ -322,11 +322,11 @@ const UploadTagging: React.FC<UploadTaggingProps> = ({
         <InstagramTagging
           isOpen={showTaggingModal}
           onClose={() => setShowTaggingModal(false)}
-          onConfirm={handleTaggingConfirm}
+          onSave={handleTaggingConfirm}
           mediaUrl={currentPreviewUrl}
           mediaType={getFileType(currentFile)}
-          galleryUsers={galleryUsers}
           initialTags={currentTags}
+          galleryId={galleryId}
         />
       )}
     </>

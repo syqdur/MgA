@@ -274,7 +274,7 @@ export const MediaModal: React.FC<MediaModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/95 backdrop-blur-sm z-40 flex items-center justify-center"
+      className="fixed inset-0 bg-black/95 backdrop-blur-lg z-50 flex items-center justify-center p-4"
       onClick={(e) => {
         // Close modal when clicking outside the content
         if (e.target === e.currentTarget) {
@@ -282,40 +282,28 @@ export const MediaModal: React.FC<MediaModalProps> = ({
         }
       }}
     >
-      {/* Close button for mobile visibility */}
+      {/* Instagram 2.0 Close button */}
       <button 
         onClick={onClose}
-        className="fixed top-16 right-4 w-12 h-12 flex items-center justify-center rounded-full bg-white/90 text-black shadow-2xl border-2 border-gray-300 touch-manipulation active:scale-95 z-[9999]"
-        style={{ 
-          position: 'fixed',
-          top: '64px',
-          right: '16px',
-          width: '48px',
-          height: '48px',
-          zIndex: 99999,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          color: 'black'
-        }}
+        className="fixed top-6 right-6 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-xl hover:bg-white/20 hover:scale-110 transition-all duration-300 z-[9999]"
       >
-        <X className="w-6 h-6 stroke-2" />
+        <X className="w-5 h-5 stroke-2" />
       </button>
 
-      {/* Navigation buttons */}
+      {/* Instagram 2.0 Navigation buttons */}
       {items.length > 1 && (
         <>
           <button
             onClick={onPrev}
-            className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-300 touch-manipulation"
-            style={{ minWidth: '48px', minHeight: '48px' }}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-110 transition-all duration-300 shadow-xl"
           >
-            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronLeft className="w-6 h-6 stroke-2" />
           </button>
           <button
             onClick={onNext}
-            className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-20 p-2 sm:p-3 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all duration-300 touch-manipulation"
-            style={{ minWidth: '48px', minHeight: '48px' }}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:scale-110 transition-all duration-300 shadow-xl"
           >
-            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            <ChevronRight className="w-6 h-6 stroke-2" />
           </button>
         </>
       )}

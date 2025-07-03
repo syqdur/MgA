@@ -179,7 +179,7 @@ export const UserNamePrompt: React.FC<UserNamePromptProps> = ({ onSubmit, isDark
           <button
             type="submit"
             disabled={!name.trim()}
-            className={`w-full p-4 rounded-xl font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`w-full p-4 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
               name.trim()
                 ? `${themeClasses.buttonColors} text-white shadow-lg hover:shadow-xl transform hover:scale-105`
                 : isDarkMode ? 'bg-neutral-700 text-neutral-400' : 'bg-gray-200 text-gray-500'

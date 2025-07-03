@@ -1,275 +1,283 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { FixedSizeGrid as Grid } from 'react-window';
-import { MediaItem } from '../types';
-import { debounce, createImageLoader } from '../services/performanceService';
-import { Heart, MessageCircle, Play } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MediaItem, Comment, Like } from '../types';
 
 interface VirtualizedGalleryProps {
-  mediaItems: MediaItem[];
+  items: MediaItem[];
   onItemClick: (index: number) => void;
-  isLoading: boolean;
-  hasMore: boolean;
-  onLoadMore: () => void;
+  comments: Comment[];
+  likes: Like[];
+  userName: string;
   isDarkMode: boolean;
-  themeConfig: any;
+  getUserAvatar?: (userName: string, deviceId?: string) => string | null;
+  getUserDisplayName?: (userName: string, deviceId?: string) => string;
+  deviceId: string;
+  galleryTheme: 'hochzeit' | 'geburtstag' | 'urlaub' | 'eigenes';
+  // Virtual scrolling props
+  itemHeight?: number;
+  overscan?: number;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
-interface MediaCellProps {
-  columnIndex: number;
-  rowIndex: number;
-  style: React.CSSProperties;
-  data: {
-    mediaItems: MediaItem[];
-    columnsPerRow: number;
-    onItemClick: (index: number) => void;
-    isDarkMode: boolean;
-    themeConfig: any;
-  };
+interface VirtualItem {
+  index: number;
+  item: MediaItem;
+  isVisible: boolean;
 }
 
-// Optimized media cell with lazy loading
-const MediaCell: React.FC<MediaCellProps> = ({ columnIndex, rowIndex, style, data }) => {
-  const { mediaItems, columnsPerRow, onItemClick, isDarkMode, themeConfig } = data;
-  const itemIndex = rowIndex * columnsPerRow + columnIndex;
-  const item = mediaItems[itemIndex];
-  
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [optimizedUrl, setOptimizedUrl] = useState<string>('');
-  const imageLoader = useMemo(() => createImageLoader(), []);
-  
-  // Load optimized image on mount
-  useEffect(() => {
-    if (item && item.url && item.type !== 'note') {
-      imageLoader.loadImage(item.url, 400).then(url => {
-        setOptimizedUrl(url);
-        setImageLoaded(true);
-      }).catch(() => {
-        setOptimizedUrl(item.url);
-        setImageLoaded(true);
-      });
+export const VirtualizedGallery: React.FC<VirtualizedGalleryProps> = ({
+  items,
+  onItemClick,
+  comments,
+  likes,
+  userName,
+  isDarkMode,
+  getUserAvatar,
+  getUserDisplayName,
+  deviceId,
+  galleryTheme,
+  itemHeight = 400, // Approximate height per item
+  overscan = 3, // Keep 3 items above/below visible area
+  onLoadMore,
+  hasMore,
+  isLoadingMore
+}) => {
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver>();
+
+  // Calculate which items should be visible
+  const updateVisibleRange = useCallback(() => {
+    if (!containerRef.current) return;
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const viewportHeight = window.innerHeight;
+    
+    const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+    const endIndex = Math.min(
+      items.length - 1,
+      Math.floor((scrollTop + viewportHeight) / itemHeight) + overscan
+    );
+
+    setVisibleRange({ start: startIndex, end: endIndex });
+    setScrollTop(scrollTop);
+
+    // Trigger load more when near bottom
+    if (onLoadMore && hasMore && !isLoadingMore) {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+      
+      if (scrollHeight - scrollTop <= clientHeight + 200) {
+        onLoadMore();
+      }
     }
-  }, [item, imageLoader]);
+  }, [items.length, itemHeight, overscan, onLoadMore, hasMore, isLoadingMore]);
 
-  if (!item) {
-    return <div style={style} />;
+  // Set up scroll listener
+  useEffect(() => {
+    const handleScroll = () => {
+      requestAnimationFrame(updateVisibleRange);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll, { passive: true });
+    
+    // Initial calculation
+    updateVisibleRange();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [updateVisibleRange]);
+
+  // Set up intersection observer for lazy loading images
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const img = entry.target as HTMLImageElement;
+          if (entry.isIntersecting && img.dataset.src) {
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+            observerRef.current?.unobserve(img);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '100px' }
+    );
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, []);
+
+  // Create virtual items array with only visible items
+  const virtualItems: VirtualItem[] = [];
+  for (let i = visibleRange.start; i <= visibleRange.end && i < items.length; i++) {
+    virtualItems.push({
+      index: i,
+      item: items[i],
+      isVisible: true
+    });
   }
 
-  if (item.type === 'note') {
-    return (
-      <div style={style} className="p-1">
+  const totalHeight = items.length * itemHeight;
+  const offsetY = visibleRange.start * itemHeight;
+
+  return (
+    <div ref={containerRef} className="relative">
+      {/* Virtual container with total height for scrollbar */}
+      <div style={{ height: totalHeight }} className="relative">
+        {/* Visible items container */}
         <div 
-          className={`
-            h-full w-full rounded-lg p-4 cursor-pointer transition-all duration-200 hover:scale-105
-            ${isDarkMode ? 'bg-neutral-800' : 'bg-white'}
-            shadow-md hover:shadow-lg
-          `}
-          onClick={() => onItemClick(itemIndex)}
+          style={{ 
+            transform: `translateY(${offsetY}px)`,
+            position: 'relative'
+          }}
         >
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className={`text-2xl mb-2 ${themeConfig.gradient}`}>💌</div>
-              <p className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                {item.noteText || item.note || 'Notiz'}
-              </p>
-              <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                von {item.uploadedBy}
-              </p>
-            </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2 px-2 sm:px-3">
+            {virtualItems.map(({ index, item }) => {
+              const itemLikes = likes.filter(l => l.mediaId === item.id);
+              const itemComments = comments.filter(c => c.mediaId === item.id);
+              
+              return (
+                <VirtualMediaItem
+                  key={`${item.id}-${index}`}
+                  item={item}
+                  index={index}
+                  onItemClick={onItemClick}
+                  likes={itemLikes}
+                  comments={itemComments}
+                  isDarkMode={isDarkMode}
+                  observer={observerRef.current}
+                />
+              );
+            })}
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div style={style} className="p-1">
-      <div 
-        className="relative h-full w-full cursor-pointer group overflow-hidden rounded-lg"
-        onClick={() => onItemClick(itemIndex)}
-      >
-        {!imageLoaded && (
-          <div className={`
-            absolute inset-0 animate-pulse rounded-lg
-            ${isDarkMode ? 'bg-neutral-700' : 'bg-gray-200'}
-          `} />
-        )}
-        
-        {imageLoaded && (
-          <>
-            {item.type === 'video' ? (
-              <div className="relative h-full w-full">
-                <video
-                  className="h-full w-full object-cover rounded-lg"
-                  src={optimizedUrl}
-                  preload="metadata"
-                  muted
-                  playsInline
-                />
-                <div className="absolute inset-0 bg-black/20 rounded-lg" />
-                <div className="absolute top-2 right-2">
-                  <Play className="w-6 h-6 text-white drop-shadow-lg" fill="white" />
-                </div>
-              </div>
-            ) : (
-              <img
-                className="h-full w-full object-cover rounded-lg transition-transform duration-200 group-hover:scale-105"
-                src={optimizedUrl}
-                alt={item.name}
-                loading="lazy"
-              />
-            )}
-            
-            {/* Overlay with metadata */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg">
-              <div className="absolute bottom-2 left-2 right-2 text-white">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Heart className="w-4 h-4" />
-                    <MessageCircle className="w-4 h-4" />
-                  </div>
-                  <div className="text-xs">
-                    {item.uploadedBy}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Tags indicator */}
-            {item.tags && item.tags.length > 0 && (
-              <div className="absolute top-2 left-2">
-                <div className="flex space-x-1">
-                  {item.tags.map((_, index) => (
-                    <div
-                      key={index}
-                      className="w-2 h-2 bg-white rounded-full shadow-lg animate-pulse"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
+      {/* Loading indicator */}
+      {isLoadingMore && (
+        <div className={`text-center py-8 transition-colors duration-300 ${
+          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+        }`}>
+          <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-t-transparent border-current"></div>
+          <p className="mt-2">Lade weitere Bilder...</p>
+        </div>
+      )}
+
+      {/* End of content indicator */}
+      {!hasMore && items.length > 0 && (
+        <div className={`text-center py-6 text-sm transition-colors duration-300 ${
+          isDarkMode ? 'text-gray-500' : 'text-gray-400'
+        }`}>
+          🎉 Alle Bilder geladen!
+        </div>
+      )}
     </div>
   );
 };
 
-export const VirtualizedGallery: React.FC<VirtualizedGalleryProps> = ({
-  mediaItems,
+// Individual media item component with lazy loading
+interface VirtualMediaItemProps {
+  item: MediaItem;
+  index: number;
+  onItemClick: (index: number) => void;
+  likes: any[];
+  comments: any[];
+  isDarkMode: boolean;
+  observer?: IntersectionObserver;
+}
+
+const VirtualMediaItem: React.FC<VirtualMediaItemProps> = ({
+  item,
+  index,
   onItemClick,
-  isLoading,
-  hasMore,
-  onLoadMore,
+  likes,
+  comments,
   isDarkMode,
-  themeConfig
+  observer
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  
-  // Responsive grid calculation
-  const columnsPerRow = useMemo(() => {
-    if (containerSize.width < 640) return 2; // mobile
-    if (containerSize.width < 1024) return 3; // tablet
-    return 4; // desktop
-  }, [containerSize.width]);
-  
-  const itemSize = useMemo(() => {
-    const gaps = (columnsPerRow - 1) * 8; // 8px gap between items
-    const padding = 16; // container padding
-    return Math.floor((containerSize.width - gaps - padding) / columnsPerRow);
-  }, [containerSize.width, columnsPerRow]);
-  
-  const rowCount = Math.ceil(mediaItems.length / columnsPerRow);
-  
-  // Debounced resize handler
-  const debouncedResize = useCallback(
-    debounce(() => {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        setContainerSize({ width: rect.width, height: rect.height });
-      }
-    }, 150),
-    []
-  );
-  
-  // Set up resize observer
+  const imgRef = useRef<HTMLImageElement>(null);
+
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    
-    const resizeObserver = new ResizeObserver(debouncedResize);
-    resizeObserver.observe(container);
-    
-    // Initial size
-    debouncedResize();
-    
+    const imgElement = imgRef.current;
+    if (imgElement && observer) {
+      observer.observe(imgElement);
+    }
+
     return () => {
-      resizeObserver.disconnect();
-    };
-  }, [debouncedResize]);
-  
-  // Infinite scroll detection
-  const handleScroll = useCallback(
-    debounce(({ scrollTop, scrollHeight, clientHeight }) => {
-      const scrollPercentage = scrollTop / (scrollHeight - clientHeight);
-      if (scrollPercentage > 0.8 && hasMore && !isLoading) {
-        onLoadMore();
+      if (imgElement && observer) {
+        observer.unobserve(imgElement);
       }
-    }, 200),
-    [hasMore, isLoading, onLoadMore]
-  );
-  
-  const cellData = useMemo(() => ({
-    mediaItems,
-    columnsPerRow,
-    onItemClick,
-    isDarkMode,
-    themeConfig
-  }), [mediaItems, columnsPerRow, onItemClick, isDarkMode, themeConfig]);
-  
-  if (containerSize.width === 0) {
-    return (
-      <div 
-        ref={containerRef} 
-        className="w-full h-full min-h-[400px]"
-      />
-    );
-  }
-  
+    };
+  }, [observer]);
+
   return (
-    <div ref={containerRef} className="w-full h-full">
-      <Grid
-        columnCount={columnsPerRow}
-        columnWidth={itemSize}
-        height={containerSize.height}
-        rowCount={rowCount}
-        rowHeight={itemSize}
-        width={containerSize.width}
-        itemData={cellData}
-        onScroll={handleScroll}
-        style={{
-          scrollbarWidth: 'thin',
-          scrollbarColor: isDarkMode ? '#374151 #1f2937' : '#d1d5db #f9fafb'
-        }}
-      >
-        {MediaCell}
-      </Grid>
+    <div
+      className="relative aspect-square cursor-pointer group touch-manipulation"
+      onClick={() => onItemClick(index)}
+      style={{ minHeight: '120px' }}
+    >
+      {/* Media Content */}
+      <div className="w-full h-full overflow-hidden rounded-lg">
+        {item.type === 'video' ? (
+          <div className="relative w-full h-full">
+            <video
+              data-src={item.url}
+              className="w-full h-full object-cover"
+              muted
+              preload="none"
+            />
+            {/* Video indicator */}
+            <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1">
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        ) : (
+          <img
+            ref={imgRef}
+            data-src={item.url}
+            alt={item.noteText || item.note || 'Gallery image'}
+            className="w-full h-full object-cover transition-opacity duration-200"
+            loading="lazy"
+            style={{ 
+              backgroundColor: isDarkMode ? '#374151' : '#f3f4f6',
+              opacity: 0
+            }}
+            onLoad={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.opacity = '1';
+            }}
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              img.style.opacity = '0.5';
+            }}
+          />
+        )}
+      </div>
       
-      {/* Loading indicator */}
-      {isLoading && (
-        <div className="flex justify-center py-4">
-          <div className={`animate-spin rounded-full h-8 w-8 border-b-2 ${themeConfig.colors.primary}`} />
+      {/* Overlay with stats */}
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm font-medium">
+            <span className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full">
+              <span>❤️</span>
+              {likes.length}
+            </span>
+            <span className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full">
+              <span>💬</span>
+              {comments.length}
+            </span>
+          </div>
         </div>
-      )}
-      
-      {/* No more items indicator */}
-      {!hasMore && mediaItems.length > 0 && (
-        <div className="text-center py-4">
-          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Alle Inhalte geladen
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

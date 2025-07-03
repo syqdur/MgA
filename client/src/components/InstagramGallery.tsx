@@ -132,8 +132,8 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
     const scrollTop = document.documentElement.scrollTop;
     const clientHeight = document.documentElement.clientHeight;
 
-    // Trigger load more when 200px from bottom
-    if (scrollHeight - scrollTop <= clientHeight + 200) {
+    // Trigger load more when 100px from bottom (more responsive)
+    if (scrollHeight - scrollTop <= clientHeight + 100) {
       loadMore();
     }
   }, [loadMore, hasMore, isLoading, isLoadingMore]);

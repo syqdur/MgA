@@ -3,6 +3,7 @@
   import { UserNamePrompt } from './components/UserNamePrompt';
   import { UploadSection } from './components/UploadSection';
   import { InstagramGallery } from './components/InstagramGallery';
+  import { VirtualizedGallery } from './components/VirtualizedGallery';
   import { MediaModal } from './components/MediaModal';
   import { AdminPanelBurger } from './components/AdminPanelBurger';
 
@@ -139,6 +140,7 @@
     const [showStoryUpload, setShowStoryUpload] = useState(false);
     const [activeTab, setActiveTab] = useState<'gallery' | 'music' | 'timeline'>('gallery');
     const [viewMode, setViewMode] = useState<'feed' | 'grid'>('feed');
+    const [enableVirtualScrolling, setEnableVirtualScrolling] = useState(false);
     const [showTutorial, setShowTutorial] = useState(false);
     const [showAdminTutorial, setShowAdminTutorial] = useState(false);
     const [showTaggingModal, setShowTaggingModal] = useState(false);
@@ -271,7 +273,8 @@
     } = useSimpleGallery({
       galleryId: gallery.id,
       userName: userName || '', // Empty string is fine for loading
-      deviceId: deviceId || ''
+      deviceId: deviceId || '',
+      enableVirtualScrolling
     });
 
     // PERFORMANCE FIX: Removed redundant data loading checks
@@ -1338,31 +1341,68 @@
                 </div>
               )}
 
-              <InstagramGallery
-                items={mediaItems}
-                onItemClick={openModal}
-                onDelete={handleDelete}
-                onEditNote={handleEditNote}
-                onEditTextTag={handleEditTextTag}
-                isAdmin={isAdmin}
-                comments={comments}
-                likes={likes}
-                onAddComment={handleAddComment}
-                onDeleteComment={handleDeleteComment}
-                onToggleLike={handleToggleLike}
-                userName={userName || ''}
-                isDarkMode={isDarkMode}
-                getUserAvatar={getUserAvatar}
-                getUserDisplayName={getUserDisplayName}
-                deviceId={deviceId || ''}
-                galleryTheme={gallery.theme}
-                galleryId={gallery.id}
-                viewMode={viewMode}
-                loadMore={loadMore}
-                hasMore={hasMore}
-                isLoading={isLoading}
-                isLoadingMore={isLoadingMore}
-              />
+              {/* Virtual Scrolling Toggle */}
+              {isAdmin && (
+                <div className="px-4 py-2 flex justify-center">
+                  <button
+                    onClick={() => setEnableVirtualScrolling(!enableVirtualScrolling)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                      enableVirtualScrolling
+                        ? 'bg-green-500 text-white shadow-md'
+                        : isDarkMode 
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {enableVirtualScrolling ? '⚡ Virtual Scrolling AN' : '🖼️ Standard Ansicht'}
+                  </button>
+                </div>
+              )}
+
+              {/* Conditional Gallery Rendering */}
+              {enableVirtualScrolling ? (
+                <VirtualizedGallery
+                  items={mediaItems}
+                  onItemClick={openModal}
+                  comments={comments}
+                  likes={likes}
+                  userName={userName || ''}
+                  isDarkMode={isDarkMode}
+                  getUserAvatar={getUserAvatar}
+                  getUserDisplayName={getUserDisplayName}
+                  deviceId={deviceId || ''}
+                  galleryTheme={gallery.theme}
+                  onLoadMore={loadMore}
+                  hasMore={hasMore}
+                  isLoadingMore={isLoadingMore}
+                />
+              ) : (
+                <InstagramGallery
+                  items={mediaItems}
+                  onItemClick={openModal}
+                  onDelete={handleDelete}
+                  onEditNote={handleEditNote}
+                  onEditTextTag={handleEditTextTag}
+                  isAdmin={isAdmin}
+                  comments={comments}
+                  likes={likes}
+                  onAddComment={handleAddComment}
+                  onDeleteComment={handleDeleteComment}
+                  onToggleLike={handleToggleLike}
+                  userName={userName || ''}
+                  isDarkMode={isDarkMode}
+                  getUserAvatar={getUserAvatar}
+                  getUserDisplayName={getUserDisplayName}
+                  deviceId={deviceId || ''}
+                  galleryTheme={gallery.theme}
+                  galleryId={gallery.id}
+                  viewMode={viewMode}
+                  loadMore={loadMore}
+                  hasMore={hasMore}
+                  isLoading={isLoading}
+                  isLoadingMore={isLoadingMore}
+                />
+              )}
             </>
           ) : activeTab === 'timeline' ? (
             <Timeline 

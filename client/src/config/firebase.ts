@@ -17,8 +17,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const storage = getStorage(app);
 export const db = getFirestore(app);
-export const analytics = getAnalytics(app);
 export const auth = getAuth(app);
+
+// Initialize analytics with error handling
+let analytics: any = null;
+try {
+  analytics = getAnalytics(app);
+} catch (error) {
+  console.warn('Firebase Analytics initialization failed:', error);
+}
+export { analytics };
 
 // Add connection state management to prevent internal assertion errors
 let isFirebaseConnected = true;

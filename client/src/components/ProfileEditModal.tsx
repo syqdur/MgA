@@ -327,9 +327,24 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
 
               {/* Countdown Date */}
               <div className="space-y-3">
-                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Countdown-Datum (optional)
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Countdown-Datum
+                  </label>
+                  {profile.countdownDate && (
+                    <button
+                      type="button"
+                      onClick={() => setProfile(prev => ({ ...prev, countdownDate: null }))}
+                      className={`px-3 py-1 text-xs rounded-lg font-medium transition-all duration-200 ${
+                        isDarkMode
+                          ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30'
+                          : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200'
+                      }`}
+                    >
+                      Countdown deaktivieren
+                    </button>
+                  )}
+                </div>
                 <input
                   type="date"
                   value={profile.countdownDate || ''}
@@ -341,7 +356,11 @@ export const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                   } border focus:outline-none focus:ring-2 focus:ring-opacity-50 ${currentTheme.colors.includes('pink') ? 'focus:ring-pink-500' : 
                   currentTheme.colors.includes('purple') ? 'focus:ring-purple-500' :
                   currentTheme.colors.includes('blue') ? 'focus:ring-blue-500' : 'focus:ring-green-500'}`}
+                  placeholder="Kein Countdown aktiv"
                 />
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {profile.countdownDate ? 'Countdown ist aktiv und wird in der Galerie angezeigt' : 'Kein Countdown ausgewählt - optional für Events'}
+                </p>
               </div>
 
             </div>

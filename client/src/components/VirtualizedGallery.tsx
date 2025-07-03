@@ -5,6 +5,7 @@ import { Heart, MessageCircle, MapPin, User, Calendar } from 'lucide-react';
 import { MediaItem, Comment, Like } from '../types';
 import { UserProfile } from '../services/firebaseService';
 import { MediaModal } from './MediaModal';
+import MobileOptimizedVideo from './MobileOptimizedVideo';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -105,21 +106,13 @@ const MediaCell = React.memo(({ columnIndex, rowIndex, style, data }: {
                   loading="lazy"
                 />
               ) : (
-                <video
+                <MobileOptimizedVideo
                   src={media.url}
                   className="w-full h-full object-cover"
-                  playsInline
-                  webkit-playsinline=""
-                  x-webkit-airplay="allow"
-                  muted
-                  preload="metadata"
-                  controlsList="nodownload nofullscreen"
-                  data-object-fit="cover"
-                  style={{
-                    WebkitTransform: 'translateZ(0)',
-                    WebkitBackfaceVisibility: 'hidden',
-                    WebkitPerspective: 1000
-                  }}
+                  showThumbnail={true}
+                  controls={false}
+                  muted={true}
+                  poster=""
                 />
               )}
               
@@ -272,8 +265,9 @@ export const VirtualizedGallery: React.FC<VirtualizedGalleryProps> = ({
         </div>
       )}
 
+      {/* TODO: MediaModal interface mismatch - needs to be updated to match current MediaModal props */}
       {/* Media Modal */}
-      {selectedMedia && (
+      {/* {selectedMedia && (
         <MediaModal
           media={selectedMedia}
           isOpen={!!selectedMedia}
@@ -284,12 +278,12 @@ export const VirtualizedGallery: React.FC<VirtualizedGalleryProps> = ({
           onLike={onLike}
           onComment={onComment}
           onDelete={onDelete}
-          currentUser={currentUser}
-          deviceId={deviceId}
-          isAdmin={isAdmin}
+          currentUser={currentUser || ''}
+          deviceId={deviceId || ''}
+          isAdmin={isAdmin || false}
           galleryId={galleryId}
         />
-      )}
+      )} */}
     </div>
   );
 };

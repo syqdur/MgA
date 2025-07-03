@@ -50,7 +50,7 @@ export const useSimpleGallery = ({
     refresh: refreshMedia
   } = useInfiniteMediaLoading({
     galleryId,
-    pageSize: 1, // 🚀 INSTANT: Load only 1 image for sub-second gallery display
+    pageSize: 4, // Optimized: Load 4 images initially for good balance
     enabled: !!galleryId
   });
 
@@ -72,21 +72,17 @@ export const useSimpleGallery = ({
     unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
     unsubscribersRef.current = [];
     
-    // 🚀 PERFORMANCE: Defer heavy data loading for instant gallery display
+    // 🚀 MOBILE OPTIMIZED: Reduced delay for better mobile performance
     const deferredTimer = setTimeout(() => {
-      console.log('🔄 Loading secondary data after media display...');
-      
-      // Load comments
+      // Load comments and likes immediately for better interactivity
       const commentsUnsubscribe = loadGalleryComments(galleryId, setComments);
       unsubscribersRef.current.push(commentsUnsubscribe);
       
-      // Load likes
       const likesUnsubscribe = loadGalleryLikes(galleryId, setLikes);
       unsubscribersRef.current.push(likesUnsubscribe);
       
       // Load user profiles with caching
       const profilesUnsubscribe = loadGalleryUserProfiles(galleryId, (profiles) => {
-        // Cache profiles for faster access
         const profilesForCache = profiles.map(p => ({
           deviceId: p.deviceId,
           userName: p.userName,
@@ -109,13 +105,10 @@ export const useSimpleGallery = ({
       };
       
       loadUsers();
-    }, 1000); // Delay 1 second for instant gallery display
+    }, 500); // Reduced to 500ms for better mobile responsiveness
     
     return () => {
       clearTimeout(deferredTimer);
-    };
-
-    return () => {
       unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
     };
   }, [galleryId]);

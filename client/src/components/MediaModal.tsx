@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Edit3, Plus, Trash2, Type } from 'lucide-react';
 import { MediaItem, Comment, Like, TextTag } from '../types';
+import MobileOptimizedVideo from './MobileOptimizedVideo';
 
 interface MediaModalProps {
   isOpen: boolean;
@@ -325,30 +326,11 @@ export const MediaModal: React.FC<MediaModalProps> = ({
         <div className="flex-1 w-full h-full flex items-center justify-center p-2 sm:p-4 lg:w-2/3 lg:mx-auto">
           <div className="relative w-full h-full max-w-full max-h-full flex items-center justify-center">
             {currentItem.type === 'video' ? (
-              <video
+              <MobileOptimizedVideo
                 src={currentItem.url}
-                controls
                 className="max-w-full max-h-full rounded-lg shadow-2xl"
-                playsInline
-                webkit-playsinline=""
-                x-webkit-airplay="allow"
-                preload="metadata"
-                muted
-                poster=""
-                controlsList="nodownload"
-                data-object-fit="cover"
-                style={{
-                  WebkitTransform: 'translateZ(0)',
-                  WebkitBackfaceVisibility: 'hidden',
-                  WebkitPerspective: 1000
-                }}
-                onLoadStart={() => setImageLoading(true)}
-                onLoadedMetadata={() => setImageLoading(false)}
-                onCanPlay={() => setImageLoading(false)}
-                onError={() => {
-                  setImageLoading(false);
-                  setImageError(true);
-                }}
+                controls={true}
+                muted={true}
               />
             ) : currentItem.type === 'note' ? (
               <div className={`w-full h-full flex flex-col items-center justify-center p-8 transition-colors duration-300 ${

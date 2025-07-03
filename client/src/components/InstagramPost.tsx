@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, AlertTriangle, Users, MapPin, Type, Edit2 } from 'lucide-react';
 import { MediaItem, Comment, Like, PersonTag, TextTag } from '../types';
+import MobileOptimizedVideo from './MobileOptimizedVideo';
 
 interface InstagramPostProps {
   item: MediaItem;
@@ -336,30 +337,12 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
         <div className="relative mx-4 mb-3 rounded-2xl overflow-hidden">
           {item.type === 'video' ? (
             <div className="relative w-full aspect-square">
-              <video
+              <MobileOptimizedVideo
                 src={item.url}
                 className="w-full h-full object-cover"
-                controls
-                playsInline
-                webkit-playsinline=""
-                x-webkit-airplay="allow"
-                preload="metadata"
-                muted
-                poster=""
-                controlsList="nodownload"
-                data-object-fit="cover"
-                style={{
-                  WebkitTransform: 'translateZ(0)',
-                  WebkitBackfaceVisibility: 'hidden',
-                  WebkitPerspective: 1000
-                }}
-                onLoadStart={() => setImageLoading(true)}
-                onLoadedMetadata={() => setImageLoading(false)}
-                onCanPlay={() => setImageLoading(false)}
-                onError={() => {
-                  setImageLoading(false);
-                  setImageError(true);
-                }}
+                controls={true}
+                muted={true}
+                showThumbnail={true}
               />
               
               {/* Like Button for Videos - Top Right */}

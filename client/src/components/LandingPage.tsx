@@ -329,59 +329,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onCreateGallery, onRoo
   ];
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-white">
-      {/* Simplified animated background - optimized for mobile */}
-      <div className="absolute inset-0 opacity-80 overflow-hidden">
-        {/* Simple gradient base */}
+    <div className="min-h-screen relative bg-white">
+      {/* Clean static background - no animations */}
+      <div className="absolute inset-0">
         <div className="absolute inset-0" 
           style={{
-            background: `linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%)`,
-            animation: 'gradientShift 8s ease-in-out infinite alternate'
-          }}
-        />
-        
-        {/* Reduced floating shapes for mobile performance */}
-        <div className="absolute inset-0 hidden sm:block">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full blur-sm bg-white/20"
-              style={{
-                width: `${20 + i * 10}px`,
-                height: `${20 + i * 10}px`,
-                left: `${10 + i * 20}%`,
-                top: `${20 + i * 15}%`,
-                animation: `floatUpDown ${4 + i}s ease-in-out infinite alternate`,
-                animationDelay: `${i * 0.5}s`
-              }}
-            />
-          ))}
-        </div>
-        
-        {/* Minimal sparkles for mobile */}
-        <div className="absolute inset-0 hidden md:block">
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={`sparkle-${i}`}
-              className="absolute text-white/30"
-              style={{
-                left: `${10 + i * 15}%`,
-                top: `${20 + i * 12}%`,
-                animation: `sparkle ${2 + i * 0.5}s ease-in-out infinite`,
-                animationDelay: `${i * 0.8}s`
-              }}
-            >
-              <Sparkles size={6} />
-            </div>
-          ))}
-        </div>
-        
-        {/* Simple overlay for mobile */}
-        <div className="absolute inset-0 opacity-40" 
-          style={{
-            background: `
-              radial-gradient(ellipse 100% 80% at 50% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 70%)
-            `
+            background: `linear-gradient(135deg, #667eea 0%, #764ba2 50%, #ff6b6b 100%)`
           }}
         />
       </div>

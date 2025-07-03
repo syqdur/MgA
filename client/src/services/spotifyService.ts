@@ -2,6 +2,7 @@ import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } 
 import { db } from '../config/firebase';
 import { SpotifyCredentials, SelectedPlaylist, SpotifyTrack } from '../types';
 import { generateCodeVerifier, generateCodeChallenge } from '../utils/pkce';
+import '../types/spotify';
 
 // Spotify API Configuration
 const SPOTIFY_CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID || '00f80ab84d074aafacc982e93f47942c';
@@ -14,16 +15,24 @@ const getRedirectUri = (): string => {
     return import.meta.env.VITE_SPOTIFY_REDIRECT_URI;
   }
   
-  // For Netlify deployment
+  // For Replit development environment
   if (typeof window !== 'undefined') {
     const currentOrigin = window.location.origin;
+    
+    // For Replit development URLs (contain replit.dev)
+    if (currentOrigin.includes('replit.dev')) {
+      console.log('🎵 Using Replit development Spotify redirect URI:', currentOrigin + '/');
+      return currentOrigin + '/';
+    }
+    
+    // For Netlify deployment
     if (currentOrigin.includes('netlify.app') || currentOrigin.includes('telya.netlify.app')) {
       console.log('🎵 Using Netlify Spotify redirect URI:', currentOrigin + '/');
       return currentOrigin + '/';
     }
     
-    // For development, use current origin
-    if (import.meta.env.DEV) {
+    // For localhost development
+    if (currentOrigin.includes('localhost') || import.meta.env.DEV) {
       console.log('🎵 Using development Spotify redirect URI:', currentOrigin + '/');
       return currentOrigin + '/';
     }

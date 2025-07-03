@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Edit3, Plus, Trash2, Type } from 'lucide-react';
 import { MediaItem, Comment, Like, TextTag } from '../types';
 import MobileOptimizedVideo from './MobileOptimizedVideo';
+import VideoThumbnail from './VideoThumbnail';
 
 interface MediaModalProps {
   isOpen: boolean;
@@ -314,11 +315,12 @@ export const MediaModal: React.FC<MediaModalProps> = ({
         <div className="flex-1 w-full h-full flex items-center justify-center p-2 sm:p-4 lg:w-2/3 lg:mx-auto">
           <div className="relative w-full h-full max-w-full max-h-full flex items-center justify-center">
             {currentItem.type === 'video' ? (
-              <MobileOptimizedVideo
+              <VideoThumbnail
                 src={currentItem.url}
                 className="max-w-full max-h-full rounded-lg shadow-2xl"
+                showPlayButton={true}
+                autoPlay={true}
                 controls={true}
-                muted={true}
               />
             ) : currentItem.type === 'note' ? (
               <div className={`w-full h-full flex flex-col items-center justify-center p-8 transition-colors duration-300 ${

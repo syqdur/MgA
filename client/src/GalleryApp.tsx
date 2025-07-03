@@ -340,27 +340,8 @@
           setStatus(`🔄 Verarbeitet Datei ${i + 1}/${files.length}...`);
           setUploadProgress((i / files.length) * 50); // First 50% for conversion
           
-          // Convert MOV to MP4 if needed
-          if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
-            console.log(`🎬 MOV-Datei erkannt: ${file.name} - wird zu MP4 konvertiert`);
-            setStatus(`🔄 Konvertiert MOV zu MP4: ${file.name}`);
-            
-            try {
-              // Simple format conversion for MOV files
-              const fileName = file.name.replace(/\.mov$/i, '.mp4');
-              const convertedFile = new File([file], fileName, {
-                type: 'video/mp4',
-                lastModified: file.lastModified
-              });
-              processedFiles.push(convertedFile);
-              console.log(`✅ MOV konvertiert zu MP4: ${fileName}`);
-            } catch (error) {
-              console.error('MOV conversion error:', error);
-              processedFiles.push(file); // Use original if conversion fails
-            }
-          } else {
-            processedFiles.push(file);
-          }
+          // Process file directly (MOV files are blocked at upload validation)
+          processedFiles.push(file);
         }
 
         // 2. Fast media compression

@@ -51,8 +51,19 @@ export class UploadService {
           compressionResults.push(result);
           
         } else if (file.type.startsWith('video/')) {
-          // Vereinfachter Video-Upload
-          const result = await this.uploadVideoFile(file, galleryId);
+          // Check for MOV files and show conversion status
+          if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
+            if (onProgress) {
+              onProgress(i, 10, `Konvertiert MOV zu WebM: ${file.name}...`);
+            }
+          }
+          
+          // Process videos through compression service (includes MOV conversion)
+          const result = await MediaCompressionService.handleVideoUpload(
+            file,
+            galleryId,
+            { contentType: 'feed', adaptiveQuality: true, connectionSpeed: 'medium' }
+          );
           compressionResults.push(result);
         }
         

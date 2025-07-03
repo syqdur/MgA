@@ -60,6 +60,12 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
       setIsLoading(false);
       return;
     }
+    
+    // Support WebM files from MOV conversion
+    const isWebMFile = src.toLowerCase().includes('.webm');
+    if (isWebMFile) {
+      console.log('🎬 WebM video detected - converted from MOV format');
+    }
 
     // Try to retry loading for other error types
     if (retryCount < maxRetries && error?.code === 4) { // Format error

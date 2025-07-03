@@ -6,6 +6,7 @@ import { NotePost } from './NotePost';
 import { GALLERY_THEMES } from '../config/themes';
 import MobileOptimizedVideo from './MobileOptimizedVideo';
 import RobustVideoPlayer from './RobustVideoPlayer';
+import VideoThumbnail from './VideoThumbnail';
 
 interface InstagramGalleryProps {
   items: MediaItem[];
@@ -476,19 +477,12 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
                       <div className="w-full h-full overflow-hidden">
                         {item.type === 'video' ? (
                           <div className="relative w-full h-full">
-                            <RobustVideoPlayer
+                            <VideoThumbnail
                               src={item.url}
                               className="w-full h-full object-cover"
-                              muted
-                              showFallback={true}
-                              fallbackText="Video wird geladen..."
+                              showPlayButton={true}
+                              autoPlay={false}
                             />
-                            {/* Video indicator */}
-                            <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1 z-20">
-                              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                              </svg>
-                            </div>
                           </div>
                         ) : (
                           <img

@@ -27,6 +27,7 @@
   import { NotificationCenter } from './components/NotificationCenter';
   import { GalleryTutorial } from './components/GalleryTutorial';
   import { AdminTutorial } from './components/AdminTutorial';
+  import { ProfileHeader } from './components/ProfileHeader';
   import InstagramTagging from './components/tagging/InstagramTagging';
   import { EventLoadingSpinner } from './components/EventLoadingSpinner';
   import { ConsolidatedNavigationBar } from './components/ConsolidatedNavigationBar';
@@ -510,6 +511,10 @@
       try {
         await deleteGalleryMediaItem(item, gallery.id);
         setStatus(`✅ ${itemType} erfolgreich gelöscht!`);
+        
+        // Instantly refresh gallery data to show changes
+        await refresh();
+        
         setTimeout(() => setStatus(''), 3000);
       } catch (error) {
         setStatus(`❌ Fehler beim Löschen des ${itemType}s.`);
@@ -1280,8 +1285,13 @@
 
         <div className="max-w-md mx-auto px-2 sm:px-0">
 
-
-
+          {/* Profile Header */}
+          <ProfileHeader
+            galleryId={gallery.id}
+            theme={gallery.theme as 'hochzeit' | 'geburtstag' | 'urlaub' | 'eigenes'}
+            isAdmin={isAdmin}
+            isDarkMode={isDarkMode}
+          />
 
           {/* Tab Navigation - always visible */}
           <TabNavigation 

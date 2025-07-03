@@ -9,6 +9,7 @@ import { galleryService, Gallery } from '../services/galleryService';
 import { subscriptionService } from '../services/subscriptionService';
 import { getUserName, getDeviceId } from '../utils/deviceId';
 // import InstagramTaggingTest from './InstagramTaggingTest';
+import ProfileHeaderExample from './ProfileHeaderExample';
 
 // Import the main App component (we'll rename the current one to GalleryApp)
 import { GalleryApp } from '../GalleryApp';
@@ -32,6 +33,7 @@ export const GalleryRouter: React.FC<GalleryRouterProps> = ({ isDarkMode, onTogg
   // Check if we're on the landing page
   const isLandingPage = location === '/' || location === '';
   const isRootAdminPage = location === '/root-admin';
+  const isProfileHeaderDemo = location === '/profile-header-demo';
   // const isTaggingTestPage = location === '/tagging-test';
   
   // Check if we're handling a Spotify callback
@@ -49,6 +51,9 @@ export const GalleryRouter: React.FC<GalleryRouterProps> = ({ isDarkMode, onTogg
     if (match && params?.slug) {
       if (params.slug === 'root-admin') {
         setShowRootAdmin(true);
+      } else if (params.slug === 'profile-header-demo') {
+        // Handle profile header demo page - no action needed, will be rendered below
+        return;
       // } else if (params.slug === 'tagging-test') {
         // Handle tagging test page
         // return;
@@ -274,6 +279,18 @@ export const GalleryRouter: React.FC<GalleryRouterProps> = ({ isDarkMode, onTogg
   // if (isTaggingTestPage) {
   //   return <InstagramTaggingTest />;
   // }
+
+  // Render ProfileHeader demo
+  if (isProfileHeaderDemo) {
+    return (
+      <ProfileHeaderExample
+        galleryId="demo-gallery"
+        theme="hochzeit"
+        isAdmin={true}
+        isDarkMode={isDarkMode}
+      />
+    );
+  }
 
   // Render landing page
   if (isLandingPage) {

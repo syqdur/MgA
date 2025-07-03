@@ -1,0 +1,109 @@
+Aufgabe
+Erstelle einen modernen, eleganten Profilheader für eine Galerie-Anwendung mit editierbaren Profileinstellungen und Firebase-Integration.
+Anforderungen
+Design & Layout
+
+Stil: Passend zum bestehenden Galerie-Design - gleiche Farbpalette, Schriftarten und Designsprache
+Layout:
+
+Desktop: Horizontales Layout mit Profilbild links, Name und Bio rechts
+Mobile: Vertikales Layout mit zentriertem Profilbild oben, Name und Bio darunter
+
+
+Farben: Exakt die gleichen Farben wie in der Galerie (Background, Akzente, Text)
+Animationen: Identische Hover-Effekte und Übergänge wie in der Galerie
+Mobile-First: Optimiert für Touch-Bedienung, große Buttons, angemessene Abstände
+
+Funktionalität
+
+Profilbild:
+
+Runde Form mit Rahmen
+Upload-Funktion beim Klick
+Placeholder-Avatar wenn kein Bild vorhanden
+
+
+Name:
+
+Editierbar im Inline-Modus
+Große, prominente Schriftart
+
+
+Bio:
+
+Mehrzeilige Beschreibung
+Editierbar als Textarea
+Maximale Zeichenanzahl
+
+
+Edit-Button:
+
+Toggle zwischen Anzeige- und Bearbeitungsmodus
+Speichern/Abbrechen-Buttons im Edit-Modus
+
+
+
+Firebase-Integration
+
+Datenpersistierung: Alle Profiländerungen werden automatisch in Firebase gespeichert
+Echtzeitaktualisierung: Änderungen werden sofort geladen
+Fehlerbehandlung: Benachrichtigungen bei Speicher- oder Ladefehlern
+Optimistische Updates: UI wird sofort aktualisiert, auch während dem Speichern
+
+Technische Details
+
+Framework: React mit Hooks (useState, useEffect)
+Styling: Tailwind CSS für responsive Design
+Icons: Lucide React für moderne Icons
+State Management: Lokaler State für Profildata
+File Upload: Drag & Drop oder File Input für Profilbilder
+
+Mobile-Optimierung
+
+Touch-Targets: Mindestens 44px große Buttons und Clickable-Areas
+Responsive Breakpoints:
+
+Mobile: < 768px (vertikal gestapelt)
+Tablet: 768px - 1024px (kompakt horizontal)
+Desktop: > 1024px (vollständig horizontal)
+
+
+Touch-Gesten: Tap-to-Edit, Swipe-friendly Navigation
+Viewport-Anpassung: Automatische Skalierung für verschiedene Bildschirmgrößen
+Performance: Optimierte Bilder und CSS für mobile Devices
+
+Design-Konsistenz mit Galerie
+
+Farb-Harmony: Verwende exakt die gleichen CSS-Variablen wie in der Galerie
+Typografie: Identische Schriftfamilien, -größen und -gewichte
+Spacing: Gleiche Margin- und Padding-Werte wie in der Galerie
+Border-Radius: Konsistente Rundungen bei Buttons und Containern
+Schatten: Gleiche Box-Shadow-Werte für Tiefeneffekt
+Komponenten-Stil: Buttons, Inputs und Cards im gleichen Stil wie die Galerie
+
+Beispiel-Struktur
+ProfilHeader/
+├── Container (gleicher Stil wie Galerie-Cards)
+├── Mobile Layout (< 768px):
+│   ├── Profilbild (zentriert oben)
+│   ├── Name (zentriert)
+│   ├── Bio (zentriert)
+│   └── Edit-Button (groß, touch-optimiert)
+├── Desktop Layout (> 768px):
+│   ├── Profilbild (links)
+│   ├── Profilinfo (rechts)
+│   │   ├── Name (editierbar)
+│   │   ├── Bio (editierbar)
+│   │   └── Edit-Button
+│   └── Speichern/Abbrechen (im Edit-Modus)
+└── Responsive Breakpoints für alle Bildschirmgrößen
+Gewünschte Eigenschaften
+
+Design-Einheitlichkeit: Nahtlose Integration in bestehende Galerie
+Mobile-Exzellenz: Perfekte Touch-Bedienung auf allen Geräten
+Schnelle Performance: Optimiert für mobile Netzwerke
+Benutzerfreundlich: Intuitive Bedienung auf Desktop und Mobile
+Elegant: Professionelles Design im Galerie-Stil
+Zuverlässig: Robuste Fehlerbehandlung auf allen Geräten
+
+Erstelle eine vollständige, funktionsfähige Komponente mit allen genannten Features.

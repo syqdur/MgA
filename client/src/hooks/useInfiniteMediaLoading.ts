@@ -21,7 +21,7 @@ interface UseInfiniteMediaLoadingReturn {
 
 export const useInfiniteMediaLoading = ({
   galleryId,
-  pageSize = 12, // Load 12 items per page - good balance for mobile and desktop
+  pageSize = 2, // 🚀 ULTRA-FAST: Load only 2 items initially for instant gallery
   enabled = true
 }: UseInfiniteMediaLoadingOptions): UseInfiniteMediaLoadingReturn => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);

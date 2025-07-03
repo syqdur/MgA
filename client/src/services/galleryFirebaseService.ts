@@ -59,7 +59,7 @@ export const isUserDeleted = async (galleryId: string, deviceId: string): Promis
 export const loadGalleryMedia = (
   galleryId: string,
   setMediaItems: (items: MediaItem[]) => void,
-  initialLimit: number = 1  // 🚀 INSTANT: Only 1 item for immediate feedback
+  initialLimit: number = 8  // 🚀 OPTIMIZED: Load 8 items for good initial experience
 ): (() => void) => {
   const mediaCollection = `galleries/${galleryId}/media`;
   

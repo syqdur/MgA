@@ -4,6 +4,7 @@ import { MediaItem, Comment, Like } from '../types';
 import { InstagramPost } from './InstagramPost';
 import { NotePost } from './NotePost';
 import { GALLERY_THEMES } from '../config/themes';
+import MobileOptimizedVideo from './MobileOptimizedVideo';
 
 interface InstagramGalleryProps {
   items: MediaItem[];
@@ -478,7 +479,7 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
                               src={item.url}
                               className="w-full h-full object-cover"
                               muted
-                              preload="metadata"
+                              playsInline webkit-playsinline="" preload="metadata" poster=""
                             />
                             {/* Video indicator */}
                             <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1">
@@ -568,7 +569,7 @@ export const InstagramGallery: React.FC<InstagramGalleryProps> = ({
                               src={item.url}
                               className="w-full h-full object-cover"
                               muted
-                              preload="metadata"
+                              playsInline webkit-playsinline="" preload="metadata" poster=""
                             />
                             {/* Video indicator */}
                             <div className="absolute top-2 right-2 bg-black/60 rounded-full p-1">

@@ -5,8 +5,8 @@
 
 // ULTRA-FAST: Maximum loading configuration for instant gallery
 export const SIMPLE_CONFIG = {
-  INITIAL_MEDIA_LIMIT: 200,      // Load massive batch immediately for instant UX
-  PAGINATION_SIZE: 100,          // Load very large chunks at a time
+  INITIAL_MEDIA_LIMIT: 8,        // 🚀 OPTIMIZED: Load only 8 items initially for fast loading
+  PAGINATION_SIZE: 12,           // 🚀 OPTIMIZED: Load 12 items per pagination for better performance
   LOADING_TIMEOUT: 2000          // Very short timeout
 };
 

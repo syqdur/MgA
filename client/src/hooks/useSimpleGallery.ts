@@ -7,6 +7,7 @@ import {
   loadGalleryUserProfiles,
   getGalleryUsers
 } from '../services/galleryFirebaseService';
+import { preloadProfiles, clearProfileCache } from '../utils/profileCache';
 import { useInfiniteMediaLoading } from './useInfiniteMediaLoading';
 
 interface UseSimpleGalleryOptions {
@@ -49,7 +50,7 @@ export const useSimpleGallery = ({
     refresh: refreshMedia
   } = useInfiniteMediaLoading({
     galleryId,
-    pageSize: 4, // Load only 4 images at a time for gradual loading
+    pageSize: 1, // 🚀 INSTANT: Load only 1 image for sub-second gallery display
     enabled: !!galleryId
   });
 
@@ -62,37 +63,57 @@ export const useSimpleGallery = ({
   // Refs for cleanup
   const unsubscribersRef = useRef<(() => void)[]>([]);
 
-  // Load additional data (comments, likes, profiles)
+  // 🚀 DEFERRED: Load additional data AFTER media is displayed (1 second delay)
   useEffect(() => {
     if (!galleryId) return;
 
-    // Clean up previous subscriptions
+    // Clear previous gallery cache and subscriptions
+    clearProfileCache(galleryId);
     unsubscribersRef.current.forEach(unsubscribe => unsubscribe());
     unsubscribersRef.current = [];
     
-    // Load comments
-    const commentsUnsubscribe = loadGalleryComments(galleryId, setComments);
-    unsubscribersRef.current.push(commentsUnsubscribe);
+    // 🚀 PERFORMANCE: Defer heavy data loading for instant gallery display
+    const deferredTimer = setTimeout(() => {
+      console.log('🔄 Loading secondary data after media display...');
+      
+      // Load comments
+      const commentsUnsubscribe = loadGalleryComments(galleryId, setComments);
+      unsubscribersRef.current.push(commentsUnsubscribe);
+      
+      // Load likes
+      const likesUnsubscribe = loadGalleryLikes(galleryId, setLikes);
+      unsubscribersRef.current.push(likesUnsubscribe);
+      
+      // Load user profiles with caching
+      const profilesUnsubscribe = loadGalleryUserProfiles(galleryId, (profiles) => {
+        // Cache profiles for faster access
+        const profilesForCache = profiles.map(p => ({
+          deviceId: p.deviceId,
+          userName: p.userName,
+          displayName: p.displayName,
+          profilePicture: p.profilePicture
+        }));
+        preloadProfiles(galleryId, profilesForCache);
+        setUserProfiles(profiles);
+      });
+      unsubscribersRef.current.push(profilesUnsubscribe);
+      
+      // Load gallery users (not real-time)
+      const loadUsers = async () => {
+        try {
+          const users = await getGalleryUsers(galleryId);
+          setGalleryUsers(users);
+        } catch (error) {
+          console.error('Error loading gallery users:', error);
+        }
+      };
+      
+      loadUsers();
+    }, 1000); // Delay 1 second for instant gallery display
     
-    // Load likes
-    const likesUnsubscribe = loadGalleryLikes(galleryId, setLikes);
-    unsubscribersRef.current.push(likesUnsubscribe);
-    
-    // Load user profiles
-    const profilesUnsubscribe = loadGalleryUserProfiles(galleryId, setUserProfiles);
-    unsubscribersRef.current.push(profilesUnsubscribe);
-    
-    // Load gallery users (not real-time)
-    const loadUsers = async () => {
-      try {
-        const users = await getGalleryUsers(galleryId);
-        setGalleryUsers(users);
-      } catch (error) {
-        console.error('Error loading gallery users:', error);
-      }
+    return () => {
+      clearTimeout(deferredTimer);
     };
-    
-    loadUsers();
 
     return () => {
       unsubscribersRef.current.forEach(unsubscribe => unsubscribe());

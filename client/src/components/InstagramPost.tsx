@@ -340,11 +340,19 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
                 src={item.url}
                 className="w-full h-full object-cover"
                 controls
-                preload="metadata"
                 playsInline
-                webkit-playsinline="true"
+                webkit-playsinline=""
+                x-webkit-airplay="allow"
+                preload="metadata"
                 muted
                 poster=""
+                controlsList="nodownload"
+                data-object-fit="cover"
+                style={{
+                  WebkitTransform: 'translateZ(0)',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitPerspective: 1000
+                }}
                 onLoadStart={() => setImageLoading(true)}
                 onLoadedMetadata={() => setImageLoading(false)}
                 onCanPlay={() => setImageLoading(false)}

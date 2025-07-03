@@ -329,11 +329,19 @@ export const MediaModal: React.FC<MediaModalProps> = ({
                 src={currentItem.url}
                 controls
                 className="max-w-full max-h-full rounded-lg shadow-2xl"
-                preload="metadata"
                 playsInline
-                webkit-playsinline="true"
+                webkit-playsinline=""
+                x-webkit-airplay="allow"
+                preload="metadata"
                 muted
                 poster=""
+                controlsList="nodownload"
+                data-object-fit="cover"
+                style={{
+                  WebkitTransform: 'translateZ(0)',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitPerspective: 1000
+                }}
                 onLoadStart={() => setImageLoading(true)}
                 onLoadedMetadata={() => setImageLoading(false)}
                 onCanPlay={() => setImageLoading(false)}

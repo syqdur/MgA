@@ -330,7 +330,7 @@
 
       try {
         const files = Array.from(pendingUploadFiles);
-        console.log(`📸 Starting Instagram compression for ${files.length} files`);
+        // Starting Instagram compression for files
         
         // 1. Instagram-konforme Komprimierung und Upload
         const compressionResults = await InstagramCompressionService.batchInstagramCompress(
@@ -862,18 +862,11 @@
 
     // Real-time gallery profile data synchronization
     useEffect(() => {
-      console.log('🔄 Gallery profile listener starting for:', gallery.id);
-      console.log('🎯 Current gallery name:', gallery.eventName);
-
       if (!gallery.id) {
-        console.log('❌ No gallery ID available for profile listener');
         return;
       }
 
-      // IMMEDIATE: Set gallery data instantly, then update with Firebase if needed
-      console.log('🧹 Clearing old gallery profile data');
-      
-      // INSTANT: Set immediate data to prevent loading skeleton
+      // Set immediate gallery data to prevent loading skeleton
       const immediateProfile = {
         name: gallery.eventName,
         bio: `${gallery.eventName} - Teilt eure schönsten Momente mit uns! 📸`,
@@ -883,7 +876,6 @@
         profilePicture: null
       };
       setGalleryProfileData(immediateProfile);
-      console.log('⚡ Set immediate profile data:', immediateProfile.name);
 
       // THEN: Load Firebase and update if admin customizations exist
       const loadGalleryProfile = async () => {
@@ -943,27 +935,21 @@
         );
 
         oldGalleryKeys.forEach(key => {
-          console.log('🧹 Clearing stale gallery profile data:', key);
           localStorage.removeItem(key);
         });
 
         // Save current gallery's profile data
         localStorage.setItem(`gallery_profile_${gallery.id}`, JSON.stringify(galleryProfileData));
-        console.log('💾 Saved current gallery profile to localStorage:', galleryProfileData.name);
       }
     }, [galleryProfileData, gallery.id]);
 
     // Subscribe to site status changes
     useEffect(() => {
-      console.log('🔄 Setting up site status subscription for gallery:', gallery.id);
-
       const unsubscribe = subscribeSiteStatus((status) => {
-        console.log('📊 Site status updated:', status);
         setSiteStatus(status);
       });
 
       return () => {
-        console.log('🧹 Cleaning up site status subscription');
         unsubscribe();
       };
     }, [gallery.id]);
@@ -974,11 +960,8 @@
 
       const checkAdminCredentials = async () => {
         try {
-          console.log('🔍 Checking admin credentials for gallery:', gallery.slug, 'ID:', gallery.id);
-
           // Check if this is a gallery owner (created by this device)
           const isOwner = localStorage.getItem(`gallery_owner_${gallery.slug}`) === 'true';
-          console.log('👑 Is owner:', isOwner);
 
           if (isOwner) {
             // Check if admin credentials are already set up (Firestore first, then localStorage)
@@ -987,32 +970,26 @@
             try {
               const adminCredsDoc = await getDoc(doc(db, 'galleries', gallery.id, 'admin', 'credentials'));
               credentialsExist = adminCredsDoc.exists();
-              console.log('📄 Admin credentials doc exists in Firestore:', credentialsExist);
             } catch (firestoreError) {
-              console.log('⚠️ Could not check Firestore, checking localStorage...');
               // Check localStorage fallback
               const localCreds = localStorage.getItem(`admin_credentials_${gallery.id}`);
               credentialsExist = !!localCreds;
-              console.log('📱 Admin credentials exist in localStorage:', credentialsExist);
             }
 
             if (!credentialsExist) {
               // Gallery owner needs admin setup - show it immediately after visitor registration is complete
-              console.log('🔧 Gallery owner needs admin credentials setup');
               setShowAdminCredentialsSetup(true);
               // Ensure admin mode is off until credentials are set up
               setIsAdmin(false);
             } else {
               // Credentials exist - check if already logged in
               const savedAuth = localStorage.getItem(`admin_auth_${gallery.id}`);
-              console.log('🔐 Saved auth exists:', !!savedAuth);
 
               if (savedAuth) {
                 const authData = JSON.parse(savedAuth);
                 // Check if auth is still valid (24 hours)
                 if (Date.now() - authData.timestamp < 24 * 60 * 60 * 1000) {
                   setIsAdmin(true);
-                  console.log('🔐 Admin auto-login successful');
 
                   // Check if admin tutorial should be shown (first time admin access)
                   const adminTutorialKey = `admin_tutorial_shown_${gallery.id}`;
@@ -1024,18 +1001,15 @@
                   // Auth expired, remove it
                   localStorage.removeItem(`admin_auth_${gallery.id}`);
                   setIsAdmin(false);
-                  console.log('⏰ Admin auth expired');
                 }
               } else {
                 // No saved auth, ensure admin mode is off
                 setIsAdmin(false);
-                console.log('🚫 No saved admin auth');
               }
             }
           } else {
             // Not the owner, ensure admin mode is off
             setIsAdmin(false);
-            console.log('👤 Not gallery owner');
           }
         } catch (error) {
           console.error('Error checking admin credentials:', error);
@@ -1375,40 +1349,22 @@
                 </div>
               )}
 
-              {/* Virtual Scrolling Toggle */}
-              {isAdmin && (
-                <div className="px-4 py-2 flex justify-center">
-                  <button
-                    onClick={() => setEnableVirtualScrolling(!enableVirtualScrolling)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                      enableVirtualScrolling
-                        ? 'bg-green-500 text-white shadow-md'
-                        : isDarkMode 
-                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    {enableVirtualScrolling ? '⚡ Virtual Scrolling AN' : '🖼️ Standard Ansicht'}
-                  </button>
-                </div>
-              )}
+
 
               {/* Conditional Gallery Rendering */}
               {enableVirtualScrolling ? (
                 <VirtualizedGallery
-                  items={mediaItems}
-                  onItemClick={openModal}
+                  mediaItems={mediaItems}
                   comments={comments}
                   likes={likes}
-                  userName={userName || ''}
-                  isDarkMode={isDarkMode}
-                  getUserAvatar={getUserAvatar}
-                  getUserDisplayName={getUserDisplayName}
+                  userProfiles={[]}
+                  onLike={handleToggleLike}
+                  onComment={handleAddComment}
+                  onDelete={handleDelete}
+                  currentUser={userName || ''}
                   deviceId={deviceId || ''}
-                  galleryTheme={gallery.theme}
-                  onLoadMore={loadMore}
-                  hasMore={hasMore}
-                  isLoadingMore={isLoadingMore}
+                  isAdmin={isAdmin}
+                  galleryId={gallery.id}
                 />
               ) : (
                 <InstagramGallery

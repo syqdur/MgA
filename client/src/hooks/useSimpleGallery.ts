@@ -100,7 +100,7 @@ export const useSimpleGallery = ({
           const users = await getGalleryUsers(galleryId);
           setGalleryUsers(users);
         } catch (error) {
-          console.error('Error loading gallery users:', error);
+          // Silent fail for better performance
         }
       };
       

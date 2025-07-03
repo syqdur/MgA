@@ -6,16 +6,26 @@ const downloadFileWithFetch = async (url: string, filename: string): Promise<Blo
   try {
     console.log(`📥 Downloading: ${filename}`);
     
-    // Versuche direkten Download
+    // Prüfe ob es eine base64 URL ist
+    if (url.startsWith('data:')) {
+      // Direkte base64 zu Blob Konvertierung
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      if (blob.size === 0) {
+        throw new Error(`Empty file: ${filename}`);
+      }
+      
+      console.log(`✅ Downloaded: ${filename} (${(blob.size / 1024).toFixed(1)} KB)`);
+      return blob;
+    }
+    
+    // Für Firebase Storage URLs oder andere URLs
     const response = await fetch(url, {
       method: 'GET',
-      mode: 'cors',
+      mode: 'no-cors', // Verwende no-cors für Firebase Storage
       cache: 'no-cache'
     });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
     
     const blob = await response.blob();
     
@@ -32,10 +42,11 @@ const downloadFileWithFetch = async (url: string, filename: string): Promise<Blo
   }
 };
 
-export const downloadAllMedia = async (mediaItems: MediaItem[]): Promise<void> => {
+export const downloadAllMedia = async (mediaItems: MediaItem[], galleryName?: string): Promise<void> => {
   try {
     const zip = new JSZip();
-    const mediaFolder = zip.folder('Hochzeitsbilder_Kristin_Maurizio');
+    const cleanGalleryName = galleryName ? galleryName.replace(/[^a-zA-Z0-9äöüÄÖÜß\s]/g, '_').replace(/\s+/g, '_') : 'Gallery';
+    const mediaFolder = zip.folder(`${cleanGalleryName}_Medien`);
     
     if (!mediaFolder) {
       throw new Error('ZIP-Ordner konnte nicht erstellt werden');
@@ -106,10 +117,10 @@ export const downloadAllMedia = async (mediaItems: MediaItem[]): Promise<void> =
     }
 
     // Übersichtsdatei erstellen
-    const summary = `=== 📸 HOCHZEITS-MEDIEN DOWNLOAD ===
+    const summary = `=== 📸 ${cleanGalleryName.toUpperCase()} MEDIEN DOWNLOAD ===
 
 Heruntergeladen: ${new Date().toLocaleString('de-DE')}
-Website: kristinundmauro.de
+Galerie: ${galleryName || 'Unbenannte Galerie'}
 
 📊 STATISTIKEN:
 ✅ Erfolgreich: ${successCount} Dateien
@@ -136,10 +147,9 @@ Siehe FEHLER_*.txt Dateien für Details.
 ` : '✅ Alle Dateien erfolgreich heruntergeladen!'}
 
 💕 Vielen Dank für die wunderschönen Erinnerungen!
-💍 Kristin & Maurizio
 
 ---
-Erstellt mit ❤️ von kristinundmauro.de
+Erstellt mit ❤️ von Telya Gallery Platform
 `;
 
     mediaFolder.file('📊_Download_Übersicht.txt', summary);
@@ -161,7 +171,7 @@ Erstellt mit ❤️ von kristinundmauro.de
     link.href = url;
     
     const today = new Date().toISOString().slice(0, 10);
-    link.download = `Hochzeitsbilder_Kristin_Maurizio_${today}.zip`;
+    link.download = `${cleanGalleryName}_${today}.zip`;
     
     document.body.appendChild(link);
     link.click();

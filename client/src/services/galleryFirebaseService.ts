@@ -269,15 +269,8 @@ export const uploadGalleryFiles = async (
                 createdAt: new Date().toISOString()
               };
 
-              console.log(`🎯 Creating notification for user: ${tag.userName} (${tag.deviceId})`);
-              console.log(`📋 Gallery ID: ${galleryId}`);
-              console.log(`📝 Is self-tag: ${isSelfTag}`);
-              console.log(`📨 Notification data:`, notificationData);
-
               // Add to notifications collection (gallery-scoped)
               const notificationRef = await addDoc(collection(db, `galleries/${galleryId}/notifications`), notificationData);
-              
-              console.log(`✅ Tag notification created for ${tag.userName} with ID: ${notificationRef.id}`);
 
               // Send browser notification if permission granted
               if (Notification.permission === 'granted') {
@@ -971,9 +964,6 @@ export const subscribeGalleryStories = (
   galleryId: string,
   callback: (stories: Story[]) => void
 ): (() => void) => {
-  console.log(`📱 === SUBSCRIBING TO GALLERY STORIES ===`);
-  console.log(`🎪 Gallery: ${galleryId}`);
-  
   const storiesCollection = `galleries/${galleryId}/stories`;
   const q = query(
     collection(db, storiesCollection),
@@ -981,8 +971,6 @@ export const subscribeGalleryStories = (
   );
   
   return onSnapshot(q, (snapshot) => {
-    console.log(`📱 Raw gallery stories from Firestore: ${snapshot.docs.length}`);
-    
     const now = new Date();
     const allStories: Story[] = [];
     const activeStories: Story[] = [];
@@ -1000,14 +988,11 @@ export const subscribeGalleryStories = (
       const expiresAt = new Date(story.expiresAt);
       const isActive = expiresAt > now;
       
-      console.log(`  ${index + 1}. ${story.userName} - ${story.mediaType} - ${isActive ? 'ACTIVE' : 'EXPIRED'} (expires: ${expiresAt.toLocaleString()})`);
-      
       if (isActive) {
         activeStories.push(story);
       }
     });
     
-    console.log(`📱 Gallery stories - Total: ${allStories.length}, Active: ${activeStories.length}`);
     callback(activeStories);
     
   }, (error) => {
@@ -1025,9 +1010,6 @@ export const subscribeAllGalleryStories = (
   galleryId: string,
   callback: (stories: Story[]) => void
 ): (() => void) => {
-  console.log(`📱 === SUBSCRIBING TO ALL GALLERY STORIES (ADMIN) ===`);
-  console.log(`🎪 Gallery: ${galleryId}`);
-  
   const storiesCollection = `galleries/${galleryId}/stories`;
   const q = query(
     collection(db, storiesCollection),
@@ -1040,7 +1022,6 @@ export const subscribeAllGalleryStories = (
       ...doc.data()
     })) as Story[];
     
-    console.log(`📱 All gallery stories (admin): ${stories.length}`);
     callback(stories);
   });
 };
@@ -1100,9 +1081,6 @@ export const deleteGalleryStory = async (
 
 export const cleanupExpiredGalleryStories = async (galleryId: string): Promise<void> => {
   try {
-    console.log(`🧹 === CLEANING UP EXPIRED GALLERY STORIES ===`);
-    console.log(`🎪 Gallery: ${galleryId}`);
-    
     const storiesCollection = `galleries/${galleryId}/stories`;
     const allStoriesSnapshot = await getDocs(collection(db, storiesCollection));
     const now = new Date();
@@ -1120,19 +1098,14 @@ export const cleanupExpiredGalleryStories = async (galleryId: string): Promise<v
       }
     });
     
-    console.log(`🗑️ Found ${expiredStories.length} expired gallery stories to delete`);
-    
     // Delete expired stories
     for (const expiredStory of expiredStories) {
       try {
         await deleteGalleryStory(expiredStory.id, galleryId);
-        console.log(`✅ Cleaned up expired gallery story: ${expiredStory.id}`);
       } catch (error) {
         console.error(`❌ Failed to cleanup expired gallery story: ${expiredStory.id}`, error);
       }
     }
-    
-    console.log(`🧹 Gallery story cleanup completed`);
     
   } catch (error) {
     console.error('Error cleaning up expired gallery stories:', error);
@@ -1141,16 +1114,12 @@ export const cleanupExpiredGalleryStories = async (galleryId: string): Promise<v
 
 // Get all users in a specific gallery for tagging
 export const getGalleryUsers = async (galleryId: string): Promise<any[]> => {
-  console.log(`🔍 === FETCHING GALLERY USERS ===`);
-  console.log(`🎪 Gallery: ${galleryId}`);
-  
   try {
     const userMap = new Map<string, any>();
     
     // 1. Get users from gallery-specific live_users collection
     const liveUsersQuery = query(collection(db, `galleries/${galleryId}/live_users`));
     const liveUsersSnapshot = await getDocs(liveUsersQuery);
-    console.log(`👥 Found ${liveUsersSnapshot.docs.length} live users in gallery`);
     
     liveUsersSnapshot.docs.forEach(doc => {
       const data = doc.data();
@@ -1168,7 +1137,6 @@ export const getGalleryUsers = async (galleryId: string): Promise<any[]> => {
     // 2. Get users from gallery-specific userProfiles collection
     const profilesQuery = query(collection(db, `galleries/${galleryId}/userProfiles`));
     const profilesSnapshot = await getDocs(profilesQuery);
-    console.log(`👤 Found ${profilesSnapshot.docs.length} user profiles in gallery`);
     
     profilesSnapshot.docs.forEach(doc => {
       const data = doc.data();
@@ -1187,7 +1155,6 @@ export const getGalleryUsers = async (galleryId: string): Promise<any[]> => {
     // 3. Get users from gallery media uploads
     const mediaQuery = query(collection(db, `galleries/${galleryId}/media`));
     const mediaSnapshot = await getDocs(mediaQuery);
-    console.log(`📸 Found ${mediaSnapshot.docs.length} media items in gallery`);
     
     mediaSnapshot.docs.forEach(doc => {
       const data = doc.data();
@@ -1215,13 +1182,9 @@ export const getGalleryUsers = async (galleryId: string): Promise<any[]> => {
       }
     });
     
-    console.log(`🚫 Found ${deletedDeviceIds.size} deleted users to filter out`);
-    
     // Filter out deleted users
     const allUsers = Array.from(userMap.values());
     const filteredUsers = allUsers.filter(user => !deletedDeviceIds.has(user.deviceId));
-    
-    console.log(`📋 Returning ${filteredUsers.length} active users for tagging (filtered out ${allUsers.length - filteredUsers.length} deleted users)`);
     
     return filteredUsers;
   } catch (error) {

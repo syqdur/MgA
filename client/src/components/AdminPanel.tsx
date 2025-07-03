@@ -93,7 +93,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setIsDownloading(true);
     
     try {
-      await downloadAllMedia(mediaItems);
+      await downloadAllMedia(mediaItems, gallery.eventName);
       
       const downloadableItems = mediaItems.filter(item => item.type !== 'note');
       alert(`✅ Download erfolgreich!\n\n📊 Heruntergeladen:\n- ${mediaItems.filter(item => item.type === 'image').length} Bilder\n- ${mediaItems.filter(item => item.type === 'video').length} Videos\n- ${mediaItems.filter(item => item.type === 'note').length} Notizen\n\n💡 Verwende die Bilder für professionelle Fotobuch-Services!`);

@@ -67,15 +67,11 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
     }
 
     const deviceId = localStorage.getItem('deviceId') || localStorage.getItem('wedding_device_id') || 'unknown';
-    console.log(`🔄 === INITIALIZING LIVE USER TRACKING ===`);
-    console.log(`👤 User: ${currentUser}`);
-    console.log(`📱 Device ID: ${deviceId}`);
+    // Initializing live user tracking silently for better performance
 
     // 🔧 FIX: Clean up any duplicate entries first
     const cleanupDuplicates = async () => {
       try {
-        console.log(`🧹 Cleaning up duplicate entries for ${currentUser}...`);
-        
         // Find all entries for this user (by userName, not deviceId) in gallery-scoped collection
         const duplicateQuery = query(
           collection(db, 'galleries', galleryId, 'live_users'),
@@ -83,16 +79,13 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
         );
         
         const duplicateSnapshot = await getDocs(duplicateQuery);
-        console.log(`🔍 Found ${duplicateSnapshot.docs.length} existing entries for ${currentUser}`);
         
         // Delete all existing entries for this user
         const deletePromises = duplicateSnapshot.docs.map(doc => {
-          console.log(`🗑️ Deleting duplicate entry: ${doc.id}`);
           return deleteDoc(doc.ref);
         });
         
         await Promise.all(deletePromises);
-        console.log(`✅ Cleaned up ${deletePromises.length} duplicate entries`);
         
       } catch (error) {
         console.error('❌ Error cleaning up duplicates:', error);
@@ -108,9 +101,7 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
           return;
         }
         
-        console.log(`📡 Updating presence for ${currentUser}...`);
-        
-        // 🔧 FIX: Use deviceId as document ID to ensure uniqueness - GALLERY SCOPED
+        // Use deviceId as document ID to ensure uniqueness - GALLERY SCOPED
         const userRef = doc(db, 'galleries', galleryId, 'live_users', deviceId);
         await setDoc(userRef, {
           userName: currentUser,
@@ -118,8 +109,6 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
           lastSeen: new Date().toISOString(),
           isActive: true
         }, { merge: true });
-        
-        console.log(`✅ Presence updated for ${currentUser} (${deviceId})`);
         
         if (!isInitialized) {
           setIsInitialized(true);
@@ -132,13 +121,11 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
     // Set user offline when leaving
     const setOffline = async () => {
       try {
-        console.log(`📡 Setting ${currentUser} offline...`);
         const userRef = doc(db, 'galleries', galleryId, 'live_users', deviceId);
         await setDoc(userRef, {
           isActive: false,
           lastSeen: new Date().toISOString()
         }, { merge: true });
-        console.log(`✅ ${currentUser} set offline`);
       } catch (error) {
         console.error('❌ Error setting user offline:', error);
       }
@@ -169,8 +156,7 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
       updatePresence();
     }, 30000); // Every 30 seconds
 
-    // 🔧 FIX: Use simple query without complex index requirements
-    console.log(`👥 Subscribing to live users (simple query without orderBy)...`);
+    // Use simple query without complex index requirements
     
     let unsubscribe: (() => void) | null = null;
     
@@ -234,10 +220,8 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
       }
       
       if (document.hidden) {
-        console.log(`👁️ Page hidden - setting ${currentUser} offline`);
         setOffline();
       } else {
-        console.log(`👁️ Page visible - updating ${currentUser} presence`);
         updatePresence();
       }
     };
@@ -246,7 +230,7 @@ export const LiveUserIndicator: React.FC<LiveUserIndicatorProps> = ({
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      console.log(`🧹 Cleaning up live user tracking for ${currentUser}`);
+      // Cleaning up live user tracking
       clearInterval(presenceInterval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('visibilitychange', handleVisibilityChange);

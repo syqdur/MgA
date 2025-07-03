@@ -34,7 +34,7 @@ class ProfileCache {
       timestamp: Date.now()
     });
 
-    console.log(`🗄️ Cached profile for ${profile.userName} (${this.cache.size} cached)`);
+    // Silent caching for better performance
   }
 
   get(galleryId: string, deviceId: string): CachedProfile | null {
@@ -88,9 +88,7 @@ class ProfileCache {
 
     toDelete.forEach(key => this.cache.delete(key));
     
-    if (toDelete.length > 0) {
-      console.log(`🧹 Cleaned ${toDelete.length} cached profiles (${this.cache.size} remaining)`);
-    }
+    // Silent cleanup for better performance
   }
 
   clear(galleryId?: string): void {
@@ -103,12 +101,11 @@ class ProfileCache {
         }
       }
       toDelete.forEach(key => this.cache.delete(key));
-      console.log(`🧹 Cleared ${toDelete.length} cached profiles for gallery ${galleryId}`);
+      // Silent clear for better performance
     } else {
       // Clear all cached profiles
-      const size = this.cache.size;
       this.cache.clear();
-      console.log(`🧹 Cleared all ${size} cached profiles`);
+      // Silent clear for better performance
     }
   }
 
@@ -129,7 +126,6 @@ class ProfileCache {
         profilePicture: profile.profilePicture
       });
     });
-    console.log(`⚡ Preloaded ${profiles.length} profiles for gallery ${galleryId}`);
   }
 }
 

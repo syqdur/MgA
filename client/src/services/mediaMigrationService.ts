@@ -31,8 +31,6 @@ export class MediaMigrationService {
     galleryId: string,
     onProgress?: (progress: MigrationProgress) => void
   ): Promise<MigrationProgress> {
-    console.log(`🔄 Starting media migration for gallery: ${galleryId}`);
-    
     const progress: MigrationProgress = {
       total: 0,
       processed: 0,
@@ -46,8 +44,6 @@ export class MediaMigrationService {
       const mediaItems = await this.loadGalleryMediaItems(galleryId);
       progress.total = mediaItems.length;
       
-      console.log(`📊 Found ${mediaItems.length} media items to check for migration`);
-      
       if (onProgress) onProgress(progress);
 
       // 2. Base64-Medien identifizieren und migrieren
@@ -58,8 +54,6 @@ export class MediaMigrationService {
       for (const item of mediaItems) {
         try {
           if (this.isBase64Media(item.media)) {
-            console.log(`🗜️ Migrating Base64 media: ${item.id}`);
-            
             // Originalgröße berechnen (Base64)
             const originalSize = this.calculateBase64Size(item.media);
             
@@ -72,9 +66,7 @@ export class MediaMigrationService {
             batchCount++;
             
             progress.migrated++;
-            progress.spaceSaved += originalSize * 0.33; // ~33% Einsparung durch Wegfall Base64-Overhead
-            
-            console.log(`✅ Migrated ${item.id}: saved ~${(originalSize * 0.33 / 1024).toFixed(1)}KB`);
+            progress.spaceSaved += originalSize * 0.33;
           }
           
           progress.processed++;

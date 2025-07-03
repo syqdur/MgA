@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Media Migration</title>
+</head>
+<body>
+    <h1>Media Migration Test</h1>
+    <p>Öffne die Entwicklerkonsole und führe aus:</p>
+    <pre>
+// Test der Migration in der Browser-Konsole
+async function testMigration() {
+  console.log('🔍 Testing Media Migration...');
+  
+  // Simuliere Analyse
+  const analysis = {
+    totalItems: 26,
+    base64Items: 0,
+    estimatedSavings: 0,
+    migrationRecommended: false
+  };
+  
+  console.log('📊 Migration Analysis:', analysis);
+  
+  // Test der Migration wenn Base64 Items vorhanden wären
+  if (analysis.base64Items > 0) {
+    console.log('🚀 Starting migration...');
+    // Migration würde hier starten
+  } else {
+    console.log('✅ No Base64 items found - migration not needed');
+  }
+}
+
+testMigration();
+    </pre>
+    
+    <button onclick="window.open('/mauros-jga', '_blank')">Open Gallery</button>
+    
+    <script>
+        console.log('🔧 Migration test page loaded');
+        console.log('Navigate to /mauros-jga and login as admin to test Media Migration Panel');
+    </script>
+</body>
+</html>

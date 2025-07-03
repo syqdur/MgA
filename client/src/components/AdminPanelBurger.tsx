@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Unlock, Settings, Download, Globe, Users, ExternalLink, Image, Video, MessageSquare, Gift, Heart, Star, Eye, Code, Music, Sparkles, Camera, Share2, X as XIcon, Menu } from 'lucide-react';
+import { Lock, Unlock, Settings, Download, Globe, Users, ExternalLink, Image, Video, MessageSquare, Gift, Heart, Star, Eye, Code, Music, Sparkles, Camera, Share2, X as XIcon, Menu, FileImage } from 'lucide-react';
 import { MediaItem } from '../types';
 import { Gallery } from '../services/galleryService';
 import { downloadAllMedia } from '../services/downloadService';
@@ -7,6 +7,7 @@ import { SiteStatus, updateSiteStatus, updateFeatureToggles } from '../services/
 import { ShowcaseModal } from './ShowcaseModal';
 import { UserManagementModal } from './UserManagementModal';
 import { SpotifyAdmin } from './SpotifyAdmin';
+import MediaMigrationPanel from './MediaMigrationPanel';
 
 interface AdminPanelBurgerProps {
   isDarkMode: boolean;
@@ -35,6 +36,7 @@ export const AdminPanelBurger: React.FC<AdminPanelBurgerProps> = ({
   const [isUpdatingFeatures, setIsUpdatingFeatures] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showSpotifyAdmin, setShowSpotifyAdmin] = useState(false);
+  const [showMediaMigration, setShowMediaMigration] = useState(false);
   const [showBurgerMenu, setShowBurgerMenu] = useState(false);
 
   const handleWhatsAppShare = () => {
@@ -293,6 +295,24 @@ export const AdminPanelBurger: React.FC<AdminPanelBurgerProps> = ({
                     </div>
                   </button>
 
+                  {/* MEDIA MIGRATION BUTTON */}
+                  <button
+                    onClick={() => {
+                      setShowMediaMigration(true);
+                      setShowBurgerMenu(false);
+                    }}
+                    className={`p-3 rounded-lg transition-all duration-200 hover:scale-105 border ${
+                      isDarkMode
+                        ? 'bg-gray-700/50 border-gray-600/50 hover:bg-gray-700/70'
+                        : 'bg-white/50 border-gray-200/50 hover:bg-white/70'
+                    }`}
+                  >
+                    <FileImage className={`w-5 h-5 mx-auto mb-1 ${isDarkMode ? 'text-orange-400' : 'text-orange-600'}`} />
+                    <div className={`text-xs font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      Media Migration
+                    </div>
+                  </button>
+
                   {/* ZIP DOWNLOAD BUTTON */}
                   <button
                     onClick={() => {
@@ -300,7 +320,7 @@ export const AdminPanelBurger: React.FC<AdminPanelBurgerProps> = ({
                       setShowBurgerMenu(false);
                     }}
                     disabled={isDownloading || mediaItems.length === 0}
-                    className={`p-3 rounded-lg transition-all duration-200 hover:scale-105 border col-span-2 ${
+                    className={`p-3 rounded-lg transition-all duration-200 hover:scale-105 border ${
                       isDownloading || mediaItems.length === 0
                         ? 'opacity-50 cursor-not-allowed'
                         : isDarkMode
@@ -394,6 +414,16 @@ export const AdminPanelBurger: React.FC<AdminPanelBurgerProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Media Migration Panel */}
+      {showMediaMigration && (
+        <MediaMigrationPanel
+          galleryId={gallery.id}
+          isOpen={showMediaMigration}
+          onClose={() => setShowMediaMigration(false)}
+          isDarkMode={isDarkMode}
+        />
       )}
     </>
   );

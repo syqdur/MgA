@@ -53,8 +53,5 @@ export const simplePerf = {
 
 // Initialize simple loading
 export const initSimpleGalleryLoading = () => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🎯 Simple gallery loading initialized');
-    console.log('📋 Config:', SIMPLE_CONFIG);
-  }
+  // Silent initialization for better performance
 };

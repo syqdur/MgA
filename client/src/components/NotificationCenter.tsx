@@ -73,7 +73,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
     const timeoutId = setTimeout(() => {
       // Notification subscription will be implemented with new tagging system
-      console.log('Notification subscription started for gallery:', galleryId);
       // Temporarily disabled until new notification system is integrated
       return () => {}; // Empty cleanup function
     }, 100);

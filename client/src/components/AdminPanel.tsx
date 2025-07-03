@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, Unlock, Settings, Download, Globe, Users, ExternalLink, Image, Video, MessageSquare, Gift, Heart, Star, Eye, Code, Music, Sparkles, Camera, Share2 } from 'lucide-react';
+import { Lock, Unlock, Settings, Download, Globe, Users, ExternalLink, Image, Video, MessageSquare, Gift, Heart, Star, Eye, Code, Music, Sparkles, Camera, Share2, FileImage } from 'lucide-react';
 import { MediaItem } from '../types';
 import { Gallery } from '../services/galleryService';
 import { downloadAllMedia } from '../services/downloadService';
@@ -7,6 +7,7 @@ import { SiteStatus, updateSiteStatus, updateFeatureToggles } from '../services/
 import { ShowcaseModal } from './ShowcaseModal';
 import { UserManagementModal } from './UserManagementModal';
 import { SpotifyAdmin } from './SpotifyAdmin';
+import MediaMigrationPanel from './MediaMigrationPanel';
 
 interface AdminPanelProps {
   isDarkMode: boolean;
@@ -37,6 +38,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [showShowcase, setShowShowcase] = useState(false);
   const [showUserManagement, setShowUserManagement] = useState(false);
   const [showSpotifyAdmin, setShowSpotifyAdmin] = useState(false);
+  const [showMediaMigration, setShowMediaMigration] = useState(false);
 
   const handleAdminToggle = () => {
     onToggleAdmin(!isAdmin);
@@ -309,6 +311,34 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </div>
                 <div className={`text-xs hidden sm:block ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   Musik verwalten
+                </div>
+              </div>
+            </div>
+          </button>
+
+          {/* MEDIA MIGRATION BUTTON */}
+          <button
+            onClick={() => setShowMediaMigration(true)}
+            className={`relative p-2 sm:p-4 rounded-xl sm:rounded-2xl backdrop-blur-xl transition-all duration-300 hover:scale-105 border overflow-hidden ${
+              isDarkMode
+                ? 'bg-gray-800/60 border-gray-700/50 hover:bg-gray-800/80 shadow-2xl shadow-orange-500/20'
+                : 'bg-white/80 border-gray-200/60 hover:bg-white/90 shadow-2xl shadow-orange-500/20'
+            }`}
+            title="Media Optimization"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-red-500/20 opacity-60"></div>
+            <div className="relative flex items-center gap-2 sm:gap-3">
+              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center ${
+                isDarkMode ? 'bg-gradient-to-br from-orange-600/30 to-red-600/30' : 'bg-gradient-to-br from-orange-500/20 to-red-500/20'
+              }`}>
+                <FileImage className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className={`font-semibold text-xs sm:text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Media Komprimierung
+                </div>
+                <div className={`text-xs hidden sm:block ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Storage optimieren
                 </div>
               </div>
             </div>
@@ -839,6 +869,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           </div>
         </div>
       )}
+
+      {/* Media Migration Panel */}
+      <MediaMigrationPanel
+        galleryId={gallery.id}
+        isOpen={showMediaMigration}
+        onClose={() => setShowMediaMigration(false)}
+        isDarkMode={isDarkMode}
+      />
     </>
   );
 };

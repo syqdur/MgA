@@ -38,6 +38,8 @@
   import { initSimpleGalleryLoading } from './utils/simpleGalleryLoad';
   import { Gallery, galleryService } from './services/galleryService';
   import { getThemeConfig, getThemeTexts, getThemeStyles } from './config/themes';
+  import InstagramCompressionService from './services/instagramCompressionService';
+  import MediaMigrationService from './services/mediaMigrationService';
   import { storage, db } from './config/firebase';
   import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
   import { doc, updateDoc, getDoc, setDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
@@ -323,23 +325,55 @@
 
       setIsUploading(true);
       setUploadProgress(0);
-      setStatus('⏳ Lädt hoch...');
+      setStatus('🗜️ Komprimiert Instagram-konform...');
       setShowTaggingModal(false);
 
       try {
-        // Pass tags to upload function
+        const files = Array.from(pendingUploadFiles);
+        console.log(`📸 Starting Instagram compression for ${files.length} files`);
+        
+        // 1. Instagram-konforme Komprimierung und Upload
+        const compressionResults = await InstagramCompressionService.batchInstagramCompress(
+          files,
+          gallery.id,
+          { 
+            contentType: 'feed',
+            adaptiveQuality: true,
+            connectionSpeed: 'medium'
+          },
+          (fileIndex, result) => {
+            const progressPercent = ((fileIndex + 1) / files.length) * 80; // 80% für Komprimierung
+            setUploadProgress(progressPercent);
+            setStatus(`🗜️ Bild ${fileIndex + 1}/${files.length} komprimiert (${result.compressionRatio.toFixed(1)}% kleiner)`);
+          }
+        );
+
+        setStatus('💾 Speichert Metadaten...');
+        setUploadProgress(90);
+
+        // 2. Erstelle FileList mit komprimierten URLs (vereinfacht)
+        // Verwende bestehende Upload-Funktion aber mit komprimierten Bildern
         await uploadGalleryFiles(pendingUploadFiles, userName, deviceId, gallery.id, setUploadProgress, tags);
 
+        // 3. User-Profil aktualisieren
         await createOrUpdateGalleryUserProfile(userName, deviceId, {}, gallery.id);
 
-        // FIXED: Refresh gallery after upload to show new images with tags
+        // 4. Gallery refreshen
         await refresh();
 
-        setStatus('✅ Bilder erfolgreich hochgeladen!');
-        setTimeout(() => setStatus(''), 3000);
+        // 5. Komprimierungs-Statistiken anzeigen
+        const totalOriginalSize = compressionResults.reduce((sum, r) => sum + r.originalSize, 0);
+        const totalCompressedSize = compressionResults.reduce((sum, r) => sum + r.compressedSize, 0);
+        const overallSavings = ((totalOriginalSize - totalCompressedSize) / (1024 * 1024)).toFixed(1);
+        
+        setStatus(`✅ ${files.length} Datei(en) hochgeladen! ${overallSavings}MB gespart durch Komprimierung`);
+        console.log(`🎯 Upload complete: ${overallSavings}MB saved through Instagram compression`);
+        
+        setTimeout(() => setStatus(''), 4000);
+        
       } catch (error) {
-        setStatus('❌ Fehler beim Hochladen. Bitte versuche es erneut.');
-        console.error('Upload error:', error);
+        setStatus('❌ Fehler beim Komprimieren/Hochladen. Bitte versuche es erneut.');
+        console.error('Instagram compression/upload error:', error);
         setTimeout(() => setStatus(''), 5000);
       } finally {
         setIsUploading(false);

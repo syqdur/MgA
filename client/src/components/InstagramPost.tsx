@@ -428,12 +428,14 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
             </div>
 
             {/* Bottom Badge Overlay - Persons (Bottom Left) and Location (Bottom Right) */}
-            {((item.personTags && item.personTags.length > 0) || (item.tags && item.tags.filter(tag => tag.type === 'person').length > 0)) && (
-              <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 flex justify-between items-end">
-                {/* Tagged Persons Badge - Bottom Left */}
-                {(() => {
-                  const personCount = (item.personTags?.length || 0) + (item.tags?.filter(tag => tag.type === 'person').length || 0);
-                  return personCount > 0 && (
+            {(() => {
+              const personCount = (item.personTags?.length || 0) + (item.tags?.filter(tag => tag.type === 'person').length || 0);
+              const locationTags = item.locationTags || (item.tags?.filter(tag => tag.type === 'location') || []);
+              
+              return (personCount > 0 || locationTags.length > 0) && (
+                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 flex justify-between items-end">
+                  {/* Tagged Persons Badge - Bottom Left */}
+                  {personCount > 0 && (
                     <div className="flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs border border-white/20">
                       <Users className="w-3 h-3" />
                       <span className="hidden xs:inline">
@@ -443,12 +445,23 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
                         {personCount}
                       </span>
                     </div>
-                  );
-                })()}
+                  )}
 
-
-              </div>
-            )}
+                  {/* Location Badge - Bottom Right */}
+                  {locationTags.length > 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs border border-white/20">
+                      <MapPin className="w-3 h-3" />
+                      <span className="hidden xs:inline truncate max-w-[120px]">
+                        {locationTags[0].locationName || locationTags[0].name || 'Ort'}
+                      </span>
+                      <span className="xs:hidden">
+                        📍
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
           )}
         </div>

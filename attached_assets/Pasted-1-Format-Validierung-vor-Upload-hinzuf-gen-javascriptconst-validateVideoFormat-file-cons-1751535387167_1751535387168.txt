@@ -1,0 +1,83 @@
+1. Format-Validierung vor Upload hinzufügen
+javascriptconst validateVideoFormat = (file) => {
+  const supportedFormats = ['mp4', 'webm', 'mov', 'avi'];
+  const extension = file.name.split('.').pop().toLowerCase();
+  
+  if (!supportedFormats.includes(extension)) {
+    throw new Error('Nicht unterstütztes Videoformat');
+  }
+  
+  // MOV-Dateien warnen
+  if (extension === 'mov') {
+    console.warn('MOV-Datei erkannt - Konvertierung zu MP4 empfohlen');
+  }
+  
+  return true;
+};
+2. MediaCompressionService erweitern
+Du solltest in deinem MediaCompressionService eine MOV-zu-MP4-Konvertierung implementieren:
+javascript// In MediaCompressionService
+const convertMOVToMP4 = async (file) => {
+  if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
+    // Verwende Canvas/WebCodecs API oder FFmpeg.js für Konvertierung
+    // Oder serverseitige Konvertierung
+    console.log('Converting MOV to MP4...');
+    
+    // Temporäre Lösung: Ändere den MIME-Type
+    const mp4Blob = new Blob([file], { type: 'video/mp4' });
+    return new File([mp4Blob], file.name.replace('.mov', '.mp4'), {
+      type: 'video/mp4',
+      lastModified: file.lastModified
+    });
+  }
+  return file;
+};
+3. Upload-Handler anpassen
+In deiner handleVideoUpload Funktion:
+javascriptconst handleVideoUpload = async (videoBlob: Blob) => {
+  if (!userName) return;
+
+  setIsUploading(true);
+  setUploadProgress(0);
+  setStatus('⏳ Video wird verarbeitet...');
+
+  try {
+    // Format prüfen und konvertieren falls nötig
+    let processedBlob = videoBlob;
+    
+    if (videoBlob.type === 'video/quicktime') {
+      setStatus('🔄 MOV wird zu MP4 konvertiert...');
+      // Konvertierung hier implementieren
+      processedBlob = new Blob([videoBlob], { type: 'video/mp4' });
+    }
+
+    await uploadGalleryVideoBlob(processedBlob, userName, deviceId, gallery.id, setUploadProgress);
+    // ... rest bleibt gleich
+  } catch (error) {
+    setStatus('❌ Fehler beim Verarbeiten des Videos. Bitte versuche es mit MP4.');
+    console.error('Video processing error:', error);
+  } finally {
+    setIsUploading(false);
+    setUploadProgress(0);
+  }
+};
+4. HTML5 Video-Element mit Fallback
+Stelle sicher, dass deine Video-Darstellung multiple Formate unterstützt:
+javascript// In deiner MediaModal oder InstagramGallery
+<video controls className="w-full h-auto">
+  <source src={videoUrl} type="video/mp4" />
+  <source src={videoUrl} type="video/webm" />
+  <p>Dein Browser unterstützt dieses Videoformat nicht.</p>
+</video>
+5. Sofortige Lösung für bestehende MOV-Dateien
+Du kannst auch eine Migration implementieren:
+javascriptconst migrateExistingMOVFiles = async () => {
+  const movItems = mediaItems.filter(item => 
+    item.type === 'video' && item.url.includes('.mov')
+  );
+  
+  for (const item of movItems) {
+    // Lade MOV-Datei und konvertiere zu MP4
+    // Oder ändere nur den MIME-Type in Firebase
+  }
+};

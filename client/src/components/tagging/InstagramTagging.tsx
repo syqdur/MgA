@@ -44,6 +44,7 @@ interface InstagramTaggingProps {
   mediaType: 'image' | 'video';
   initialTags?: MediaTag[];
   galleryId: string;
+  galleryUsers: any[];
 }
 
 const InstagramTagging: React.FC<InstagramTaggingProps> = ({
@@ -53,7 +54,8 @@ const InstagramTagging: React.FC<InstagramTaggingProps> = ({
   mediaUrl,
   mediaType,
   initialTags = [],
-  galleryId
+  galleryId,
+  galleryUsers
 }) => {
   const [tags, setTags] = useState<MediaTag[]>(initialTags);
   const [mode, setMode] = useState<'idle' | 'person' | 'location' | 'text'>('idle');
@@ -64,66 +66,14 @@ const InstagramTagging: React.FC<InstagramTaggingProps> = ({
   const [showTextInput, setShowTextInput] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [textInput, setTextInput] = useState('');
-  const [galleryUsers, setGalleryUsers] = useState<any[]>([]);
+
   const [locationSearchResults, setLocationSearchResults] = useState<any[]>([]);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLImageElement | HTMLVideoElement>(null);
 
-  // Load gallery users
-  useEffect(() => {
-    if (isOpen && galleryId) {
-      const loadUsers = async () => {
-        try {
-          console.log(`🔍 Loading gallery users for gallery: ${galleryId}`);
-          
-          // Try both userProfiles and live_users collections
-          const [userProfilesSnapshot, liveUsersSnapshot] = await Promise.all([
-            getDocs(collection(db, 'galleries', galleryId, 'userProfiles')),
-            getDocs(collection(db, 'galleries', galleryId, 'live_users'))
-          ]);
-          
-          const usersMap = new Map();
-          
-          // Add users from userProfiles
-          userProfilesSnapshot.forEach(doc => {
-            const data = doc.data();
-            usersMap.set(doc.id, {
-              deviceId: doc.id,
-              userName: data.userName || data.name || 'Unbekannter Nutzer',
-              displayName: data.displayName,
-              profilePicture: data.profilePicture,
-              isOnline: false
-            });
-          });
-          
-          // Add/update users from live_users
-          liveUsersSnapshot.forEach(doc => {
-            const data = doc.data();
-            const existing = usersMap.get(doc.id) || {};
-            usersMap.set(doc.id, {
-              ...existing,
-              deviceId: doc.id,
-              userName: data.userName || data.name || existing.userName || 'Unbekannter Nutzer',
-              displayName: data.displayName || existing.displayName,
-              profilePicture: data.profilePicture || existing.profilePicture,
-              isOnline: true
-            });
-          });
-          
-          const users = Array.from(usersMap.values());
-          console.log(`✅ Loaded ${users.length} gallery users:`, users.map(u => u.userName));
-          setGalleryUsers(users);
-        } catch (error: any) {
-          console.error('❌ Failed to load gallery users:', error);
-          setGalleryUsers([]);
-        }
-      };
-      
-      loadUsers();
-    }
-  }, [isOpen, galleryId]);
+  // Gallery users are now passed as a prop, no need to load them here
 
   // Location search effect
   useEffect(() => {

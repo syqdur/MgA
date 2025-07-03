@@ -123,7 +123,6 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
 
       <video
         ref={videoRef}
-        src={src}
         className={className}
         muted={muted}
         controls={controls}
@@ -143,7 +142,20 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
           WebkitBackfaceVisibility: 'hidden',
           WebkitPerspective: 1000,
         }}
-      />
+      >
+        {/* Multiple source formats for better compatibility */}
+        <source src={src} type="video/mp4" />
+        {src.includes('.mov') && (
+          <source src={src} type="video/quicktime" />
+        )}
+        <source src={src} type="video/webm" />
+        {/* Fallback message */}
+        <p className="text-gray-500 p-4 text-center">
+          Dein Browser unterstützt dieses Videoformat nicht. 
+          <br />
+          Versuche es mit einem modernen Browser oder lade das Video als MP4 hoch.
+        </p>
+      </video>
     </div>
   );
 };

@@ -4,6 +4,12 @@ interface MediaCompressionOptions {
   contentType: 'feed' | 'story' | 'reel';
 }
 
+interface VideoConversionResult {
+  convertedFile: File;
+  originalFormat: string;
+  newFormat: string;
+}
+
 interface CompressionResult {
   url: string;
   originalSize: number;
@@ -13,7 +19,26 @@ interface CompressionResult {
 }
 
 /**
- * Fast media compression service with GPU acceleration
+ * Validate video format before processing
+ */
+const validateVideoFormat = (file: File): boolean => {
+  const supportedFormats = ['mp4', 'webm', 'mov', 'avi'];
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  
+  if (!supportedFormats.includes(extension)) {
+    throw new Error('Nicht unterstütztes Videoformat. Unterstützt: MP4, WebM, MOV, AVI');
+  }
+  
+  // MOV-Dateien warnen aber akzeptieren
+  if (extension === 'mov') {
+    console.warn('🟡 MOV-Datei erkannt - wird automatisch zu MP4 konvertiert für bessere Browser-Kompatibilität');
+  }
+  
+  return true;
+};
+
+/**
+ * Fast media compression service with GPU acceleration and MOV conversion
  */
 export class MediaCompressionService {
   
@@ -197,6 +222,78 @@ export class MediaCompressionService {
   }
 
   /**
+   * Convert MOV files to MP4 for better browser compatibility using FFmpeg
+   */
+  private static async convertMOVToMP4(file: File): Promise<File> {
+    if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
+      console.log('🔄 Converting MOV to MP4 for browser compatibility...');
+      
+      try {
+        // Import FFmpeg dynamically
+        const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+        const { fetchFile } = await import('@ffmpeg/util');
+        
+        const ffmpeg = new FFmpeg();
+        
+        // Load FFmpeg
+        await ffmpeg.load();
+        
+        // Write input file
+        const inputName = 'input.mov';
+        const outputName = 'output.mp4';
+        
+        await ffmpeg.writeFile(inputName, await fetchFile(file));
+        
+        // Convert MOV to MP4 with web-compatible settings
+        await ffmpeg.exec([
+          '-i', inputName,
+          '-c:v', 'libx264',
+          '-c:a', 'aac',
+          '-movflags', 'faststart',
+          '-preset', 'fast',
+          '-crf', '23',
+          outputName
+        ]);
+        
+        // Read the output file
+        const data = await ffmpeg.readFile(outputName);
+        
+        // Create new file
+        const fileName = file.name.replace(/\.mov$/i, '.mp4');
+        const convertedFile = new File([data], fileName, {
+          type: 'video/mp4',
+          lastModified: file.lastModified
+        });
+        
+        console.log(`✅ MOV converted to MP4: ${fileName}`);
+        return convertedFile;
+        
+      } catch (error) {
+        console.error('❌ FFmpeg conversion failed, trying simple conversion:', error);
+        
+        // Fallback to simple MIME type conversion
+        try {
+          const mp4Blob = new Blob([file], { type: 'video/mp4' });
+          const fileName = file.name.replace(/\.mov$/i, '.mp4');
+          
+          const convertedFile = new File([mp4Blob], fileName, {
+            type: 'video/mp4',
+            lastModified: file.lastModified
+          });
+          
+          console.log(`✅ MOV converted to MP4 (simple): ${fileName}`);
+          return convertedFile;
+        } catch (fallbackError) {
+          console.error('❌ Simple conversion also failed, using original:', fallbackError);
+          return file;
+        }
+      }
+    }
+    
+    return file;
+  }
+
+  /**
    * Fast video processing with compression for all videos
    */
   private static async handleVideoUpload(
@@ -207,11 +304,17 @@ export class MediaCompressionService {
     const startTime = Date.now();
     
     try {
+      // First, validate video format
+      validateVideoFormat(file);
+      
+      // Convert MOV to MP4 if needed
+      const processedFile = await this.convertMOVToMP4(file);
+      
       // Always compress videos regardless of size for consistency
       console.log('📹 Compressing video for optimal storage and performance');
       
       // Use canvas-based video compression
-      const compressedBlob = await this.compressVideoUsingCanvas(file);
+      const compressedBlob = await this.compressVideoUsingCanvas(processedFile);
       
       const compressionRatio = ((file.size - compressedBlob.size) / file.size) * 100;
       

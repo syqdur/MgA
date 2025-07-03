@@ -1591,7 +1591,8 @@
             onSave={handleTaggingConfirm}
             mediaUrl={pendingUploadUrl}
             mediaType={pendingUploadFiles?.[0]?.type.startsWith('video') ? 'video' : 'image'}
-            galleryId={gallery.firebaseId}
+            galleryId={gallery.id}
+            galleryUsers={galleryUsers}
             initialTags={[]}
           />
         )}

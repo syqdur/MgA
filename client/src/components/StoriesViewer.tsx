@@ -51,27 +51,35 @@ export const StoriesViewer: React.FC<StoriesViewerProps> = ({
       img.onerror = () => setIsLoading(false);
       img.src = currentStory.mediaUrl;
     } else {
-      // For videos, we'll set loading to false immediately
-      // In a real app, you'd want to wait for video to be ready
-      setIsLoading(false);
+      // For videos, wait a bit longer before starting progress
+      setTimeout(() => setIsLoading(false), 500);
     }
   }, [currentIndex, currentStory, isOpen, onStoryViewed]);
 
   useEffect(() => {
     if (!isOpen || isPaused || isLoading) return;
 
+    // Reset progress at start of new story
+    setProgress(0);
+    
     const interval = setInterval(() => {
       setProgress(prev => {
         const newProgress = prev + (100 / (STORY_DURATION / 100));
         
         if (newProgress >= 100) {
-          // Move to next story
-          if (currentIndex < stories.length - 1) {
-            setCurrentIndex(prev => prev + 1);
-          } else {
-            onClose();
-          }
-          return 0;
+          // Clear interval before changing story to prevent jumping
+          clearInterval(interval);
+          
+          // Move to next story after a small delay
+          setTimeout(() => {
+            if (currentIndex < stories.length - 1) {
+              setCurrentIndex(prev => prev + 1);
+            } else {
+              onClose();
+            }
+          }, 50);
+          
+          return 100; // Keep at 100% until story changes
         }
         
         return newProgress;

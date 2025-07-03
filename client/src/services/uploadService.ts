@@ -1,6 +1,6 @@
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import InstagramCompressionService from './instagramCompressionService';
+import { MediaCompressionService } from './mediaCompressionService';
 
 interface UploadedMedia {
   url: string;
@@ -43,10 +43,10 @@ export class UploadService {
       
       try {
         if (file.type.startsWith('image/')) {
-          const result = await InstagramCompressionService.compressAndUploadImage(
+          const result = await MediaCompressionService.compressAndUploadImage(
             file,
             galleryId,
-            { contentType: 'feed', adaptiveQuality: true }
+            { contentType: 'feed', adaptiveQuality: true, connectionSpeed: 'medium' }
           );
           compressionResults.push(result);
           

@@ -1,7 +1,7 @@
 import { doc, updateDoc, collection, query, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import OptimizedMediaHandler from '../utils/optimizedMediaHandler';
-import InstagramCompressionService from './instagramCompressionService';
+import { MediaCompressionService } from './mediaCompressionService';
 
 interface MigrationProgress {
   total: number;
@@ -150,12 +150,12 @@ export class MediaMigrationService {
         lastModified: Date.now()
       });
 
-      // Instagram-konforme Komprimierung und Upload
+      // Fast media compression and upload
       if (item.mediaType === 'image') {
-        const result = await InstagramCompressionService.compressAndUploadImage(
+        const result = await MediaCompressionService.compressAndUploadImage(
           file,
           galleryId,
-          { contentType: 'feed', adaptiveQuality: true }
+          { contentType: 'feed', adaptiveQuality: true, connectionSpeed: 'medium' }
         );
         
         console.log(`📸 Image migrated with ${result.compressionRatio.toFixed(1)}% compression`);

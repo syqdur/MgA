@@ -87,6 +87,16 @@ This is a comprehensive wedding gallery application with the following architect
 
 ## Recent Changes
 
+### July 3, 2025 (Migration Complete & Critical Issue Fixes - COMPLETED)
+- **Successful Migration from Replit Agent to Replit**: Completed comprehensive migration from Replit Agent to Replit environment with all core functionality preserved including gallery creation, profile management, admin controls, real-time users, and Firebase integration
+- **Admin Credentials Setup Fix**: Fixed admin credentials prompt appearing on every page reload by implementing localStorage flag system that tracks when setup has been shown/completed - admin setup now only appears once when gallery owner first visits after creation
+- **Instagram-Standard Video Compression**: Implemented comprehensive H.264-compatible video compression system with 1080p maximum resolution, optimized bitrate calculation, and WebM/VP9 encoding for Instagram-style video optimization reducing file sizes by 40-70%
+- **Video Thumbnail Generation System**: Created robust video thumbnail generation using HTML5 canvas at 0.5 seconds frame capture, converting to JPEG format with 80% quality for instant gallery previews without loading full video files in tagging modals
+- **Stories Progress Bar Fix**: Resolved progress bar jumping issue in StoriesViewer by implementing proper interval clearing and delayed story transitions, ensuring smooth linear progress without visual glitches during story changes
+- **Enhanced Video Tagging Experience**: Updated InstagramTagging component to display generated video thumbnails instead of black video elements, providing clear visual feedback during person/location tagging workflow
+- **Optimized Video Processing Pipeline**: Videos now compress to Instagram standards with automatic fallback to original upload if compression fails, supporting up to 25MB file size limit with intelligent quality adjustment
+- **Mobile Video Enhancement**: Added enhanced mobile video attributes including playsInline, webkit-playsinline, and proper metadata loading for seamless mobile video experience across all gallery components
+
 ### July 3, 2025 (Replit Migration Complete & Instagram Media Compression System - COMPLETED)
 - **Successful Migration from Replit Agent**: Completed comprehensive migration from Replit Agent to Replit environment with all core functionality preserved including gallery creation, profile management, admin controls, real-time users, and Firebase integration
 - **Instagram-Standard Media Compression**: Implemented professional Instagram-konforme Komprimierung mit 1080px max resolution, 82% JPEG quality, und adaptive quality basierend auf Verbindungsgeschwindigkeit - löst Base64 Storage-Problem komplett

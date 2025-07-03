@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { X, MapPin, Type, Users, Trash2 } from 'lucide-react';
 import { PersonTag, LocationTag, TextTag, MediaTag, TagPosition, GalleryUser } from '../../types/tagging';
 import { getCurrentLocation, reverseGeocode, searchLocations } from '../../utils/locationService';
+import { MediaCompressionService } from '../../services/mediaCompressionService';
 
 interface InstagramTaggingProps {
   isOpen: boolean;
@@ -33,6 +34,8 @@ const InstagramTagging: React.FC<InstagramTaggingProps> = ({
   const [textInput, setTextInput] = useState('');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [showTags, setShowTags] = useState(false);
+  const [videoThumbnail, setVideoThumbnail] = useState<string>('');
+  const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
   
   const mediaRef = useRef<HTMLImageElement | HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -46,6 +49,30 @@ const InstagramTagging: React.FC<InstagramTaggingProps> = ({
   const recentUsers = availableUsers
     .sort((a, b) => (b.lastSeen?.getTime() || 0) - (a.lastSeen?.getTime() || 0))
     .slice(0, 5);
+
+  // Generate video thumbnail when component opens
+  useEffect(() => {
+    if (isOpen && mediaType === 'video' && mediaUrl && !videoThumbnail && !isGeneratingThumbnail) {
+      setIsGeneratingThumbnail(true);
+      
+      // Create a blob URL from the media URL if it's an object URL
+      fetch(mediaUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          const file = new File([blob], 'video.mp4', { type: blob.type });
+          return MediaCompressionService.generateVideoThumbnail(file);
+        })
+        .then(thumbnail => {
+          setVideoThumbnail(thumbnail);
+        })
+        .catch(error => {
+          console.error('Failed to generate video thumbnail:', error);
+        })
+        .finally(() => {
+          setIsGeneratingThumbnail(false);
+        });
+    }
+  }, [isOpen, mediaType, mediaUrl, videoThumbnail, isGeneratingThumbnail]);
 
   // Filter users by search
   const filteredUsers = searchQuery 
@@ -253,13 +280,53 @@ const InstagramTagging: React.FC<InstagramTaggingProps> = ({
             draggable={false}
           />
         ) : (
-          <video
-            ref={mediaRef as React.RefObject<HTMLVideoElement>}
-            src={mediaUrl}
-            className="max-w-full max-h-full object-contain"
-            controls
-            preload="metadata"
-          />
+          <div className="relative max-w-full max-h-full">
+            {videoThumbnail ? (
+              <img
+                ref={mediaRef as React.RefObject<HTMLImageElement>}
+                src={videoThumbnail}
+                alt="Video Thumbnail"
+                className="max-w-full max-h-full object-contain"
+                draggable={false}
+              />
+            ) : isGeneratingThumbnail ? (
+              <div className="flex items-center justify-center min-h-[300px] text-white">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                  <p>Erstelle Video-Vorschau...</p>
+                </div>
+              </div>
+            ) : (
+              <video
+                ref={mediaRef as React.RefObject<HTMLVideoElement>}
+                src={mediaUrl}
+                className="max-w-full max-h-full object-contain"
+                controls
+                preload="auto"
+                onLoadedMetadata={() => {
+                  // Try to generate thumbnail from loaded video
+                  if (!videoThumbnail && !isGeneratingThumbnail) {
+                    setIsGeneratingThumbnail(true);
+                    fetch(mediaUrl)
+                      .then(response => response.blob())
+                      .then(blob => {
+                        const file = new File([blob], 'video.mp4', { type: blob.type });
+                        return MediaCompressionService.generateVideoThumbnail(file);
+                      })
+                      .then(thumbnail => {
+                        setVideoThumbnail(thumbnail);
+                      })
+                      .catch(error => {
+                        console.error('Failed to generate video thumbnail:', error);
+                      })
+                      .finally(() => {
+                        setIsGeneratingThumbnail(false);
+                      });
+                  }
+                }}
+              />
+            )}
+          </div>
         )}
 
         {/* Tags Overlay */}

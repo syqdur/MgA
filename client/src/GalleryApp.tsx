@@ -38,7 +38,7 @@
   import { initSimpleGalleryLoading } from './utils/simpleGalleryLoad';
   import { Gallery, galleryService } from './services/galleryService';
   import { getThemeConfig, getThemeTexts, getThemeStyles } from './config/themes';
-  import InstagramCompressionService from './services/instagramCompressionService';
+  import { MediaCompressionService } from './services/mediaCompressionService';
   import MediaMigrationService from './services/mediaMigrationService';
   import { storage, db } from './config/firebase';
   import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -332,8 +332,8 @@
         const files = Array.from(pendingUploadFiles);
         // Starting Instagram compression for files
         
-        // 1. Instagram-konforme Komprimierung und Upload
-        const compressionResults = await InstagramCompressionService.batchInstagramCompress(
+        // 1. Fast media compression and upload
+        const compressionResults = await MediaCompressionService.batchCompress(
           files,
           gallery.id,
           { 
@@ -738,6 +738,9 @@
 
         setIsAdmin(true);
         setShowAdminCredentialsSetup(false);
+        
+        // Clear the setup shown flag since credentials are now configured
+        localStorage.removeItem(`admin_setup_shown_${gallery.id}`);
 
         // Create default gallery profile with owner name when admin credentials are set up
         if (!galleryProfileData || !galleryProfileData.profilePicture) {
@@ -964,6 +967,9 @@
           const isOwner = localStorage.getItem(`gallery_owner_${gallery.slug}`) === 'true';
 
           if (isOwner) {
+            // Check if admin credentials setup has already been shown/completed for this gallery
+            const adminSetupShown = localStorage.getItem(`admin_setup_shown_${gallery.id}`);
+            
             // Check if admin credentials are already set up (Firestore first, then localStorage)
             let credentialsExist = false;
 
@@ -976,12 +982,14 @@
               credentialsExist = !!localCreds;
             }
 
-            if (!credentialsExist) {
-              // Gallery owner needs admin setup - show it immediately after visitor registration is complete
+            if (!credentialsExist && !adminSetupShown) {
+              // Gallery owner needs admin setup - show it only once
               setShowAdminCredentialsSetup(true);
+              // Mark that setup has been shown to prevent showing again
+              localStorage.setItem(`admin_setup_shown_${gallery.id}`, 'true');
               // Ensure admin mode is off until credentials are set up
               setIsAdmin(false);
-            } else {
+            } else if (credentialsExist) {
               // Credentials exist - check if already logged in
               const savedAuth = localStorage.getItem(`admin_auth_${gallery.id}`);
 

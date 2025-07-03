@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, MessageCircle, MoreHorizontal, Trash2, Edit3, AlertTriangle, Users, MapPin, Type, Edit2 } from 'lucide-react';
 import { MediaItem, Comment, Like, PersonTag, TextTag } from '../types';
 import MobileOptimizedVideo from './MobileOptimizedVideo';
+import VideoThumbnail from './VideoThumbnail';
 
 interface InstagramPostProps {
   item: MediaItem;
@@ -337,12 +338,10 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
         <div className="relative mx-4 mb-3 rounded-2xl overflow-hidden">
           {item.type === 'video' ? (
             <div className="relative w-full aspect-square">
-              <MobileOptimizedVideo
+              <VideoThumbnail
                 src={item.url}
                 className="w-full h-full object-cover"
-                controls={true}
-                muted={true}
-                showThumbnail={true}
+                showPlayButton={true}
               />
               
               {/* Like Button for Videos - Top Right */}
@@ -363,15 +362,6 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
                   )}
                 </button>
               </div>
-
-              {/* Loading indicator for videos */}
-              {imageLoading && (
-                <div className={`absolute inset-0 flex items-center justify-center transition-colors duration-300 ${
-                  isDarkMode ? 'bg-gray-700/80' : 'bg-gray-100/80'
-                }`}>
-                  <div className="w-8 h-8 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
             </div>
           ) : (
           <div className="relative w-full aspect-square">
@@ -409,10 +399,9 @@ export const InstagramPost: React.FC<InstagramPostProps> = ({
               <img
                 src={item.url}
                 alt="Hochzeitsfoto"
-                className={`w-full h-full object-cover cursor-pointer transition-opacity duration-300 ${
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
                   imageLoading ? 'opacity-0' : 'opacity-100'
                 }`}
-                onClick={onClick}
                 onLoad={handleImageLoad}
                 onError={handleImageError}
                 loading="lazy"

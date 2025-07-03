@@ -39,49 +39,103 @@ const MobileOptimizedVideo: React.FC<MobileOptimizedVideoProps> = ({
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       
-      if (ctx) {
-        // Set canvas dimensions to match video
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 360;
+      console.log('📹 Video state:', {
+        readyState: video.readyState,
+        videoWidth: video.videoWidth,
+        videoHeight: video.videoHeight,
+        currentTime: video.currentTime,
+        duration: video.duration,
+        paused: video.paused,
+        ended: video.ended
+      });
+      
+      if (ctx && video.videoWidth > 0 && video.videoHeight > 0 && video.readyState >= 2) {
+        console.log(`📹 Generating thumbnail: ${video.videoWidth}x${video.videoHeight}`);
         
-        // Draw video frame to canvas
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Use reasonable canvas dimensions to avoid memory issues
+        const maxSize = 640;
+        const aspectRatio = video.videoHeight / video.videoWidth;
+        let canvasWidth = Math.min(video.videoWidth, maxSize);
+        let canvasHeight = Math.min(video.videoHeight, maxSize);
         
-        // Convert to base64 image
-        const thumbnailData = canvas.toDataURL('image/jpeg', 0.8);
-        setThumbnail(thumbnailData);
-        
-        // Call callback if provided
-        if (onThumbnailGenerated) {
-          onThumbnailGenerated(thumbnailData);
+        if (video.videoWidth > video.videoHeight) {
+          canvasHeight = canvasWidth * aspectRatio;
+        } else {
+          canvasWidth = canvasHeight / aspectRatio;
         }
+        
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        
+        try {
+          // Clear canvas first
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Draw video frame to canvas
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          
+          // Test if canvas has actual image data
+          const imageData = ctx.getImageData(0, 0, Math.min(10, canvas.width), Math.min(10, canvas.height));
+          const hasData = imageData.data.some(pixel => pixel !== 0);
+          
+          if (!hasData) {
+            console.error('❌ Canvas contains no image data');
+            return;
+          }
+          
+          // Convert to base64 image
+          const thumbnailData = canvas.toDataURL('image/jpeg', 0.8);
+          
+          // Validate that we actually got image data
+          if (thumbnailData && thumbnailData.length > 1000 && !thumbnailData.includes('data:,')) {
+            console.log('✅ Thumbnail generated successfully', thumbnailData.substring(0, 50) + '...');
+            setThumbnail(thumbnailData);
+            
+            // Call callback if provided
+            if (onThumbnailGenerated) {
+              onThumbnailGenerated(thumbnailData);
+            }
+          } else {
+            console.error('❌ Generated thumbnail data is invalid or too small');
+          }
+        } catch (error) {
+          console.error('❌ Error generating thumbnail:', error);
+          // Fallback: try again with a slight delay
+          setTimeout(() => {
+            if (!thumbnail && video.readyState >= 2) {
+              console.log('🔄 Retrying thumbnail generation...');
+              generateThumbnail();
+            }
+          }, 500);
+        }
+      } else {
+        console.warn('⚠️ Cannot generate thumbnail:', {
+          hasContext: !!ctx,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          readyState: video.readyState
+        });
       }
     }
   };
 
-  // Generate thumbnail when video metadata loads
+  // Generate thumbnail when component mounts and video is ready
   useEffect(() => {
-    if (showThumbnail && videoRef.current) {
+    if (showThumbnail && videoRef.current && src && !thumbnail) {
       const video = videoRef.current;
+      console.log('📹 Setting up thumbnail generation for video:', src);
       
-      const handleLoadedMetadata = () => {
-        // Set video to a small time position to get a meaningful frame
+      // Force load the video if not already loading
+      if (video.readyState === 0) {
+        console.log('📹 Loading video for thumbnail generation...');
+        video.load();
+      } else if (video.readyState >= 1) {
+        // Metadata already loaded, can proceed
+        console.log('📹 Video metadata already available, proceeding with thumbnail');
         video.currentTime = 0.1;
-      };
-      
-      const handleSeeked = () => {
-        generateThumbnail();
-      };
-      
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
-      video.addEventListener('seeked', handleSeeked);
-      
-      return () => {
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        video.removeEventListener('seeked', handleSeeked);
-      };
+      }
     }
-  }, [showThumbnail, src]);
+  }, [showThumbnail, src, thumbnail]);
 
   const handlePlayClick = () => {
     if (videoRef.current) {
@@ -127,18 +181,20 @@ const MobileOptimizedVideo: React.FC<MobileOptimizedVideoProps> = ({
       
       <video
         ref={videoRef}
-        // Only set src when video should start loading OR when generating thumbnail
-        src={(hasStarted || showThumbnail) ? src : undefined}
+        // Always set src for thumbnail generation
+        src={src}
         className={className}
         muted={muted}
         playsInline
         webkit-playsinline=""
         x-webkit-airplay="allow"
-        // For thumbnail generation, preload metadata; otherwise none
-        preload={showThumbnail ? "metadata" : "none"}
+        // Always preload metadata for thumbnail generation
+        preload="metadata"
         poster={poster}
         controls={hasStarted && controls}
         loop={loop}
+        // Enable CORS for canvas drawing
+        crossOrigin="anonymous"
         // Critical mobile video attributes
         data-object-fit="cover"
         controlsList="nodownload nofullscreen"
@@ -158,9 +214,41 @@ const MobileOptimizedVideo: React.FC<MobileOptimizedVideoProps> = ({
         onEnded={() => setIsPlaying(false)}
         onClick={handleVideoClick}
         onLoadedMetadata={() => {
-          if (showThumbnail && !hasStarted) {
-            // For thumbnail mode, force metadata preload
-            videoRef.current?.load();
+          console.log('📹 Video onLoadedMetadata triggered');
+          if (showThumbnail && videoRef.current) {
+            const video = videoRef.current;
+            console.log(`📹 Video ready for thumbnail: ${video.videoWidth}x${video.videoHeight}, duration: ${video.duration}`);
+            // Seek to 0.5 seconds to get a more meaningful frame
+            video.currentTime = 0.5;
+          }
+        }}
+        onSeeked={() => {
+          console.log('📹 Video seeked, generating thumbnail');
+          if (showThumbnail && !thumbnail) {
+            // Add a small delay to ensure the frame is properly rendered
+            setTimeout(() => {
+              generateThumbnail();
+            }, 100);
+          }
+        }}
+        onError={(e) => {
+          console.error('📹 Video error:', e);
+        }}
+        onLoadStart={() => {
+          console.log('📹 Video load started');
+        }}
+        onLoadedData={() => {
+          console.log('📹 Video data loaded');
+        }}
+        onCanPlay={() => {
+          console.log('📹 Video can play - ready for thumbnail generation');
+          if (showThumbnail && !thumbnail && videoRef.current) {
+            // Fallback thumbnail generation if seeking doesn't work
+            setTimeout(() => {
+              if (!thumbnail) {
+                generateThumbnail();
+              }
+            }, 300);
           }
         }}
       />

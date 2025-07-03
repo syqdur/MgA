@@ -78,8 +78,6 @@ export const useInfiniteMediaLoading = ({
       limit(pageSize)
     );
 
-    console.log(`📱 Loading initial ${pageSize} media items...`);
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
       try {
         const items = snapshot.docs.map(processMediaItem);
@@ -93,16 +91,12 @@ export const useInfiniteMediaLoading = ({
           lastDocRef.current = null;
           setHasMore(false);
         }
-
-        console.log(`✅ Loaded ${items.length} initial media items`);
       } catch (err) {
-        console.error('❌ Error processing initial media:', err);
         setError('Fehler beim Laden der Medien');
       } finally {
         setIsLoading(false);
       }
     }, (err) => {
-      console.error('❌ Firebase error during initial load:', err);
       setError('Verbindungsfehler beim Laden der Galerie');
       setIsLoading(false);
     });
@@ -124,8 +118,6 @@ export const useInfiniteMediaLoading = ({
         limit(pageSize)
       );
 
-      console.log(`📱 Loading next ${pageSize} media items...`);
-
       // Use get() instead of onSnapshot for pagination to avoid conflicts
       const { getDocs } = await import('firebase/firestore');
       const snapshot = await getDocs(q);
@@ -143,14 +135,10 @@ export const useInfiniteMediaLoading = ({
         // Update pagination state
         lastDocRef.current = snapshot.docs[snapshot.docs.length - 1];
         setHasMore(snapshot.docs.length === pageSize);
-
-        console.log(`✅ Loaded ${newItems.length} additional media items`);
       } else {
         setHasMore(false);
-        console.log('📱 No more media items to load');
       }
     } catch (err) {
-      console.error('❌ Error loading more media:', err);
       setError('Fehler beim Laden weiterer Medien');
     } finally {
       setIsLoadingMore(false);

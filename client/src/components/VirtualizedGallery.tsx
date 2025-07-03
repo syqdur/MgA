@@ -82,18 +82,13 @@ const MediaCell = React.memo(({ columnIndex, rowIndex, style, data }: {
     onLike(media.id);
   };
 
-  const handleClick = () => {
-    onMediaClick(media);
-  };
-
   return (
     <div
       ref={ref}
       style={style}
       className="p-1"
-      onClick={handleClick}
     >
-      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
+      <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
         {/* Media Content */}
         <div className="aspect-square relative">
           {inView ? (

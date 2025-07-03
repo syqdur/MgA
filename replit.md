@@ -87,6 +87,15 @@ This is a comprehensive wedding gallery application with the following architect
 
 ## Recent Changes
 
+### July 3, 2025 (Instagram-Style Galerie & Video-Kontrollen System - COMPLETED)
+- **Inline-Video-Wiedergabe**: Videos spielen jetzt direkt in der Instagram-Galerie ab statt in einem Modal - vollständig integrierte Video-Player mit sofortiger Wiedergabe beim Klick
+- **Instagram 2.0 Video-Kontrollen**: Implementiert moderne Video-Kontrollen mit Sound-Toggle (VolumeX/Volume2), Pause-Button, Hover-Effekte und glassmorphic Design im Instagram-Stil
+- **Bilder in Originalgröße**: Entfernt Modal-Öffnung für Bilder - Bilder werden jetzt direkt in der Galerie in Originalgröße angezeigt ohne Click-to-Modal Funktionalität
+- **Video-Thumbnail-Problem Komplett Gelöst**: Robuste VideoThumbnail Komponente mit direkter Video-Element-Nutzung statt fehleranfälliger Canvas-Generierung - eliminiert CORS-Probleme und "no supported sources" Fehler
+- **Elegante Fallback-Darstellung**: Film-Icon mit Play-Button für Videos die nicht geladen werden können, konsistente Benutzerführung unabhängig vom Video-Status
+- **Performance-Code-Cleanup**: Entfernt unnötige console.logs aus VideoThumbnail und useInfiniteMediaLoading Hooks für bessere Performance und saubere Konsolen-Ausgabe
+- **Mobile Video-Optimierung**: Videos mit playsInline, loop-Funktionalität und optimierten Touch-Kontrollen für nahtlose mobile Wiedergabe in der Galerie
+
 ### July 3, 2025 (Replit Migration Complete & Performance Optimization - COMPLETED)
 - **Successful Migration from Replit Agent**: Completed migration from Replit Agent to Replit environment with all core functionality preserved including gallery creation, profile management, admin controls, real-time users, and Firebase integration
 - **Mobile Video Thumbnail Fix**: Fixed mobile video preview thumbnails by forcing metadata preload, adding proper video dimensions, and implementing onLoadedMetadata event to generate thumbnails at 0.1 seconds

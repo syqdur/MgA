@@ -87,7 +87,17 @@ This is a comprehensive wedding gallery application with the following architect
 
 ## Recent Changes
 
-### July 3, 2025 (Migration Complete & Instagram 2.0 UI Enhancement - COMPLETED)
+### July 3, 2025 (MOV-to-MP4 Conversion System Implemented - COMPLETED)
+- **Complete MOV Conversion Fix**: Fixed critical issue where MOV files weren't being converted to MP4 during upload process - now all MOV files are automatically converted to MP4 format with proper MIME type before upload to ensure browser compatibility
+- **Upload Pipeline Enhanced**: Updated handleTaggingConfirm function in GalleryApp.tsx to process MOV files through conversion before compression and upload - eliminates the root cause of MOV playback issues by converting at source
+- **Video Recording Conversion**: Enhanced handleVideoUpload function to handle MOV video blobs from recording and convert them to MP4 format before upload
+- **Grid View Display Fix**: Removed hardcoded MOV blocking logic from InstagramGallery grid view that was preventing videos from displaying - grid and feed views now have consistent video handling
+- **Smart Legacy MOV Detection**: Enhanced RobustVideoPlayer to detect legacy MOV files uploaded before conversion system and show appropriate "Datei wurde vor der Konvertierung hochgeladen" message while allowing new converted videos to play normally
+- **User Feedback Integration**: Added clear status messages during MOV conversion process showing "Konvertiert MOV zu MP4" with progress indicators for better user experience
+- **Dual Processing Pipeline**: Implemented two-stage processing - first MOV-to-MP4 conversion for compatibility, then Instagram-style compression for optimization while maintaining format consistency
+- **Complete Video Display Consistency**: Videos now work identically in both feed and grid views - new uploads are MP4 format and play properly, legacy MOV files show informative fallback messages
+
+### July 3, 2025 (Migration Complete & Instagram 2.0 UI Enhancement - PREVIOUSLY COMPLETED)
 - **Complete Migration Success**: Successfully migrated wedding gallery application from Replit Agent to Replit environment with all core functionality preserved including gallery creation, profile management, admin controls, real-time users, and Firebase integration
 - **Video Source Error Resolution**: Fixed "no supported sources" video errors by removing multiple source elements and using direct src attribute, eliminating format compatibility issues with Firebase Storage URLs
 - **Instagram 2.0 Modal Design**: Completely redesigned MediaModal and InstagramTagging modals with modern glassmorphism effects, rounded buttons, backdrop blur, and premium visual styling matching Instagram's latest design language

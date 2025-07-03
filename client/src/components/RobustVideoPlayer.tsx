@@ -45,10 +45,6 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
     
     console.error('🚨 Video error:', {
       src: video.src,
-      error: error?.message,
-      code: error?.code,
-      networkState: video.networkState,
-      readyState: video.readyState,
       retryCount
     });
 
@@ -56,7 +52,16 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
       onError(error);
     }
 
-    // Try to retry loading for certain error types
+    // Check if this is a legacy MOV file that wasn't converted during upload
+    const isMOVFile = src.toLowerCase().includes('.mov');
+    if (isMOVFile && error?.code === 4) {
+      console.warn('❌ Legacy MOV file detected - cannot play this format. File was uploaded before conversion system.');
+      setHasError(true);
+      setIsLoading(false);
+      return;
+    }
+
+    // Try to retry loading for other error types
     if (retryCount < maxRetries && error?.code === 4) { // Format error
       console.log(`🔄 Retrying video load (${retryCount + 1}/${maxRetries})...`);
       setRetryCount(prev => prev + 1);
@@ -91,23 +96,34 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
 
   // If we have an error and should show fallback, render fallback UI
   if (hasError && showFallback) {
+    const isMOVFile = src.toLowerCase().includes('.mov');
+    
     return (
       <div className={`${className} flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400`}>
         <Film className="w-8 h-8 mb-2" />
-        <p className="text-sm text-center px-2">{fallbackText}</p>
-        <button
-          onClick={() => {
-            setHasError(false);
-            setIsLoading(true);
-            setRetryCount(0);
-            if (videoRef.current) {
-              videoRef.current.load();
-            }
-          }}
-          className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-        >
-          Erneut versuchen
-        </button>
+        {isMOVFile ? (
+          <>
+            <p className="text-sm text-center px-2">MOV-Format wird nicht unterstützt</p>
+            <p className="text-xs text-center px-2 mt-1">Datei wurde vor der Konvertierung hochgeladen</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-center px-2">{fallbackText}</p>
+            <button
+              onClick={() => {
+                setHasError(false);
+                setIsLoading(true);
+                setRetryCount(0);
+                if (videoRef.current) {
+                  videoRef.current.load();
+                }
+              }}
+              className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
+            >
+              Erneut versuchen
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -142,13 +158,8 @@ const RobustVideoPlayer: React.FC<RobustVideoPlayerProps> = ({
           WebkitBackfaceVisibility: 'hidden',
           WebkitPerspective: 1000,
         }}
+        src={src}
       >
-        {/* Multiple source formats for better compatibility */}
-        <source src={src} type="video/mp4" />
-        {src.includes('.mov') && (
-          <source src={src} type="video/quicktime" />
-        )}
-        <source src={src} type="video/webm" />
         {/* Fallback message */}
         <p className="text-gray-500 p-4 text-center">
           Dein Browser unterstützt dieses Videoformat nicht. 

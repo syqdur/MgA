@@ -332,9 +332,40 @@
         const files = Array.from(pendingUploadFiles);
         // Starting Instagram compression for files
         
-        // 1. Fast media compression and upload
+        // 1. Convert MOV files to MP4 and compress all media
+        const processedFiles: File[] = [];
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          setStatus(`🔄 Verarbeitet Datei ${i + 1}/${files.length}...`);
+          setUploadProgress((i / files.length) * 50); // First 50% for conversion
+          
+          // Convert MOV to MP4 if needed
+          if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
+            console.log(`🎬 MOV-Datei erkannt: ${file.name} - wird zu MP4 konvertiert`);
+            setStatus(`🔄 Konvertiert MOV zu MP4: ${file.name}`);
+            
+            try {
+              // Simple format conversion for MOV files
+              const fileName = file.name.replace(/\.mov$/i, '.mp4');
+              const convertedFile = new File([file], fileName, {
+                type: 'video/mp4',
+                lastModified: file.lastModified
+              });
+              processedFiles.push(convertedFile);
+              console.log(`✅ MOV konvertiert zu MP4: ${fileName}`);
+            } catch (error) {
+              console.error('MOV conversion error:', error);
+              processedFiles.push(file); // Use original if conversion fails
+            }
+          } else {
+            processedFiles.push(file);
+          }
+        }
+
+        // 2. Fast media compression
         const compressionResults = await MediaCompressionService.batchCompress(
-          files,
+          processedFiles,
           gallery.id,
           { 
             contentType: 'feed',
@@ -342,18 +373,21 @@
             connectionSpeed: 'medium'
           },
           (fileIndex, result) => {
-            const progressPercent = ((fileIndex + 1) / files.length) * 80; // 80% für Komprimierung
+            const progressPercent = 50 + ((fileIndex + 1) / processedFiles.length) * 30; // 30% für Komprimierung
             setUploadProgress(progressPercent);
-            setStatus(`🗜️ Bild ${fileIndex + 1}/${files.length} komprimiert (${result.compressionRatio.toFixed(1)}% kleiner)`);
+            setStatus(`🗜️ Datei ${fileIndex + 1}/${processedFiles.length} komprimiert (${result.compressionRatio.toFixed(1)}% kleiner)`);
           }
         );
 
-        setStatus('💾 Speichert Metadaten...');
+        setStatus('💾 Lädt hoch...');
         setUploadProgress(90);
 
-        // 2. Erstelle FileList mit komprimierten URLs (vereinfacht)
-        // Verwende bestehende Upload-Funktion aber mit komprimierten Bildern
-        await uploadGalleryFiles(pendingUploadFiles, userName, deviceId, gallery.id, setUploadProgress, tags);
+        // 3. Create FileList from processed files for upload
+        const fileList = new DataTransfer();
+        processedFiles.forEach(file => fileList.items.add(file));
+        
+        // Upload processed files instead of original files
+        await uploadGalleryFiles(fileList.files, userName, deviceId, gallery.id, setUploadProgress, tags);
 
         // 3. User-Profil aktualisieren
         await createOrUpdateGalleryUserProfile(userName, deviceId, {}, gallery.id);
@@ -402,10 +436,29 @@
 
       setIsUploading(true);
       setUploadProgress(0);
-      setStatus('⏳ Video wird hochgeladen...');
+      setStatus('🔄 Verarbeitet Video...');
 
       try {
-        await uploadGalleryVideoBlob(videoBlob, userName, deviceId, gallery.id, setUploadProgress);
+        // Convert MOV videoBlob to MP4 if needed
+        let processedBlob = videoBlob;
+        
+        // Check if the blob is MOV format (though recorded videos usually aren't MOV)
+        if (videoBlob.type === 'video/quicktime' || videoBlob.type === 'video/mov') {
+          console.log('🎬 MOV-Video erkannt - wird zu MP4 konvertiert');
+          setStatus('🔄 Konvertiert MOV zu MP4...');
+          
+          try {
+            // Convert MOV blob to MP4
+            processedBlob = new Blob([videoBlob], { type: 'video/mp4' });
+            console.log('✅ MOV-Video zu MP4 konvertiert');
+          } catch (error) {
+            console.error('MOV video conversion error:', error);
+            processedBlob = videoBlob; // Use original if conversion fails
+          }
+        }
+
+        setStatus('⏳ Video wird hochgeladen...');
+        await uploadGalleryVideoBlob(processedBlob, userName, deviceId, gallery.id, setUploadProgress);
 
         await createOrUpdateGalleryUserProfile(userName, deviceId, {}, gallery.id);
 

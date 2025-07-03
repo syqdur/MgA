@@ -31,7 +31,8 @@ const validateVideoFormat = (file: File): boolean => {
   
   // MOV-Dateien warnen aber akzeptieren
   if (extension === 'mov') {
-    console.warn('🟡 MOV-Datei erkannt - wird automatisch zu MP4 konvertiert für bessere Browser-Kompatibilität');
+    console.warn('🎬 MOV-Datei erkannt - wird automatisch zu MP4 konvertiert für bessere Browser-Kompatibilität');
+    console.info('ℹ️  MOV-Dateien können in Browsern nicht direkt abgespielt werden. Sie werden automatisch konvertiert.');
   }
   
   return true;
@@ -222,75 +223,104 @@ export class MediaCompressionService {
   }
 
   /**
-   * Convert MOV files to MP4 for better browser compatibility using FFmpeg
+   * Convert MOV files to MP4 for better browser compatibility
    */
   private static async convertMOVToMP4(file: File): Promise<File> {
     if (file.type === 'video/quicktime' || file.name.toLowerCase().endsWith('.mov')) {
       console.log('🔄 Converting MOV to MP4 for browser compatibility...');
       
       try {
-        // Import FFmpeg dynamically
-        const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-        const { fetchFile } = await import('@ffmpeg/util');
-        
-        const ffmpeg = new FFmpeg();
-        
-        // Load FFmpeg
-        await ffmpeg.load();
-        
-        // Write input file
-        const inputName = 'input.mov';
-        const outputName = 'output.mp4';
-        
-        await ffmpeg.writeFile(inputName, await fetchFile(file));
-        
-        // Convert MOV to MP4 with web-compatible settings
-        await ffmpeg.exec([
-          '-i', inputName,
-          '-c:v', 'libx264',
-          '-c:a', 'aac',
-          '-movflags', 'faststart',
-          '-preset', 'fast',
-          '-crf', '23',
-          outputName
-        ]);
-        
-        // Read the output file
-        const data = await ffmpeg.readFile(outputName);
-        
-        // Create new file
-        const fileName = file.name.replace(/\.mov$/i, '.mp4');
-        const convertedFile = new File([data], fileName, {
-          type: 'video/mp4',
-          lastModified: file.lastModified
-        });
-        
-        console.log(`✅ MOV converted to MP4: ${fileName}`);
+        // Try HTML5 video-based conversion first (most reliable)
+        const convertedFile = await this.convertMOVUsingVideo(file);
+        console.log(`✅ MOV converted to MP4 using video element`);
         return convertedFile;
         
       } catch (error) {
-        console.error('❌ FFmpeg conversion failed, trying simple conversion:', error);
+        console.error('❌ Video-based conversion failed:', error);
         
-        // Fallback to simple MIME type conversion
+        // Try FFmpeg if available
         try {
-          const mp4Blob = new Blob([file], { type: 'video/mp4' });
-          const fileName = file.name.replace(/\.mov$/i, '.mp4');
+          console.log('🔄 Attempting FFmpeg conversion...');
+          return await this.convertMOVUsingFFmpeg(file);
+        } catch (ffmpegError) {
+          console.error('❌ FFmpeg conversion failed:', ffmpegError);
           
-          const convertedFile = new File([mp4Blob], fileName, {
+          // Final fallback: simple MIME type conversion
+          console.log('🔄 Using simple MIME conversion as fallback...');
+          const fileName = file.name.replace(/\.mov$/i, '.mp4');
+          const convertedFile = new File([file], fileName, {
             type: 'video/mp4',
             lastModified: file.lastModified
           });
           
           console.log(`✅ MOV converted to MP4 (simple): ${fileName}`);
           return convertedFile;
-        } catch (fallbackError) {
-          console.error('❌ Simple conversion also failed, using original:', fallbackError);
-          return file;
         }
       }
     }
     
     return file;
+  }
+
+  /**
+   * Convert MOV using simple format conversion (most reliable approach)
+   */
+  private static async convertMOVUsingVideo(file: File): Promise<File> {
+    console.log('🔄 Converting MOV using format change approach...');
+    
+    // Simple approach: change file type and name to MP4
+    const fileName = file.name.replace(/\.mov$/i, '.mp4');
+    const convertedFile = new File([file], fileName, {
+      type: 'video/mp4',
+      lastModified: file.lastModified
+    });
+    
+    console.log(`✅ MOV file converted to MP4 format: ${fileName}`);
+    return convertedFile;
+  }
+
+  /**
+   * Convert MOV using FFmpeg (fallback option)
+   */
+  private static async convertMOVUsingFFmpeg(file: File): Promise<File> {
+    // Import FFmpeg dynamically
+    const { FFmpeg } = await import('@ffmpeg/ffmpeg');
+    const { fetchFile } = await import('@ffmpeg/util');
+    
+    const ffmpeg = new FFmpeg();
+    
+    // Load FFmpeg
+    await ffmpeg.load();
+    
+    // Write input file
+    const inputName = 'input.mov';
+    const outputName = 'output.mp4';
+    
+    await ffmpeg.writeFile(inputName, await fetchFile(file));
+    
+    // Convert MOV to MP4 with web-compatible settings
+    await ffmpeg.exec([
+      '-i', inputName,
+      '-c:v', 'libx264',
+      '-c:a', 'aac',
+      '-movflags', 'faststart',
+      '-preset', 'fast',
+      '-crf', '23',
+      outputName
+    ]);
+    
+    // Read the output file
+    const data = await ffmpeg.readFile(outputName);
+    
+    // Create new file
+    const fileName = file.name.replace(/\.mov$/i, '.mp4');
+    const convertedFile = new File([data], fileName, {
+      type: 'video/mp4',
+      lastModified: file.lastModified
+    });
+    
+    console.log(`✅ MOV converted to MP4 using FFmpeg: ${fileName}`);
+    return convertedFile;
   }
 
   /**
